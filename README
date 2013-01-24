@@ -1,0 +1,6 @@
+This is very simple GTK+ terminal emulator with XEMBED socket for embedding virtual keyboard. It relies on VteTerminal library and works with matchbox-keyboard. Kterm supports xterm-like "-e" option for running command in terminal. Some initial settings may be defined in kterm.conf file. It is located in the same directory as main binary. Kterm is developed for Kindle Touch. I tested it under 5.3.2 firmware. It is reported to also work on Kindle Paperwhite.
+
+Menu pops up when you click at the top of the screen. I don't think I will add many more features, as it is to be simple.
+
+Run kterm -h for command line options
+
