@@ -191,6 +191,7 @@ void set_terminal_colors(GtkWidget *terminal, int scheme){
   GdkColor color_white = { 0, 0xffff, 0xffff, 0xffff };
   GdkColor color_black = { 0, 0x0000, 0x0000, 0x0000 };
   GdkColor color_bg, color_fg;
+  GdkColor color_dim = { 0, 0x8888, 0x8888, 0x8888 };
   switch(scheme){
     default:
     case VTE_SCHEME_LIGHT:
@@ -207,6 +208,10 @@ void set_terminal_colors(GtkWidget *terminal, int scheme){
   vte_terminal_set_colors(VTE_TERMINAL(terminal), NULL, NULL, palette, 8);
   vte_terminal_set_color_background(VTE_TERMINAL(terminal), &color_bg);
   vte_terminal_set_color_foreground(VTE_TERMINAL(terminal), &color_fg);
+  vte_terminal_set_color_dim(VTE_TERMINAL(terminal), &color_dim);
+  vte_terminal_set_color_bold(VTE_TERMINAL(terminal), &color_fg);
+  vte_terminal_set_color_cursor(VTE_TERMINAL(terminal), &color_fg);
+  vte_terminal_set_color_highlight(VTE_TERMINAL(terminal), &color_fg);
   conf->color_scheme = scheme;
 }
 
@@ -361,9 +366,13 @@ void widget_destroy(GtkWidget *widget, gpointer data){
 void usage(){
    printf("kterm %s\n", VERSION);
    printf("Usage: kterm [OPTIONS]\n");
+   printf("        -c <0|1>     - color scheme (0 light, 1 dark)\n");
    printf("        -d           - debug mode\n");
    printf("        -e <command> - execute command in kterm\n");
+   printf("        -f <family>  - font family\n");
    printf("        -h           - show this message\n");
+   printf("        -k <0|1>     - keyboard off/on\n");
+   printf("        -s <size>    - font size\n");
    printf("        -v           - print version and exit\n");
    exit(0);
 }
@@ -373,12 +382,14 @@ int main(int argc, char **argv){
   GtkWidget *socket, *keyboard_box;
   unsigned long kb_xid;
 
+  conf = parse_config(); // call first so args overide defaults/config
+
   // support for '-e' argument contributed by fvek
   char *cargv[255];
   char *argbuf;
   int c, i;
   cargv[0]=NULL;
-  while((c = getopt(argc, argv, "de:hv")) != -1){
+  while((c = getopt(argc, argv, "c:de:f:hk:s:v")) != -1){
     switch(c){
       case 'd':
         debug = TRUE;
@@ -393,14 +404,27 @@ int main(int argc, char **argv){
         }
         cargv[i] = NULL;
         break;
+      case 'c':
+        i = atoi(optarg);
+        if ((i == 0) | (i == 1)) conf->color_scheme = i;
+        break;
+      case 'k':
+        i = atoi(optarg);
+        if ((i == 0) | (i == 1)) conf->kb_on = i;
+        break;
+      case 's':
+        i = atoi(optarg);
+        if (i > 0) conf->font_size = i;
+        break;
+      case 'f':
+        snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
+        break;
       case 'h':
       case 'v':
         usage();
         break;
     }
   }
-
-  conf = parse_config();
 
   gtk_init(&argc, &argv);
 
