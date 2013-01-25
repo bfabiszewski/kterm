@@ -365,8 +365,9 @@ void widget_destroy(GtkWidget *widget, gpointer data){
 
 void usage(){
    printf("kterm %s\n", VERSION);
-   printf("Usage: kterm [OPTION]\n");
+   printf("Usage: kterm [OPTIONS]\n");
    printf("        -c <0|1>     - color scheme (0 light, 1 dark)\n");
+   printf("        -d           - debug mode\n");
    printf("        -e <command> - execute command in kterm\n");
    printf("        -f <family>  - font family\n");
    printf("        -h           - show this message\n");
@@ -388,7 +389,7 @@ int main(int argc, char **argv){
   char *argbuf;
   int c, i;
   cargv[0]=NULL;
-  while((c = getopt(argc, argv, "c:e:f:hk:s:v")) != -1){
+  while((c = getopt(argc, argv, "c:de:f:hk:s:v")) != -1){
     switch(c){
       case 'd':
         debug = TRUE;
