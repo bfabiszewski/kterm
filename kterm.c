@@ -210,8 +210,8 @@ void set_terminal_colors(GtkWidget *terminal, int scheme){
   vte_terminal_set_color_foreground(VTE_TERMINAL(terminal), &color_fg);
   vte_terminal_set_color_dim(VTE_TERMINAL(terminal), &color_dim);
   vte_terminal_set_color_bold(VTE_TERMINAL(terminal), &color_fg);
-  vte_terminal_set_color_cursor(VTE_TERMINAL(terminal), &color_fg);
-  vte_terminal_set_color_highlight(VTE_TERMINAL(terminal), &color_fg);
+  vte_terminal_set_color_cursor(VTE_TERMINAL(terminal), NULL);
+  vte_terminal_set_color_highlight(VTE_TERMINAL(terminal), NULL);
   conf->color_scheme = scheme;
 }
 
