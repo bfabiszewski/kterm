@@ -31,6 +31,7 @@ kterm_conf *conf;
 unsigned int debug = FALSE;
 
 void clean_and_exit(){
+  D printf("clean and exit\n");
   kill(-getpid(), SIGTERM);  // cleanup children
   exit(0); 
 }
@@ -319,10 +320,16 @@ void toggle_keyboard(GtkWidget *widget, gpointer box){
 }
 
 
-static gboolean button_press(GtkWidget *terminal, GdkEventButton *event, gpointer box){
-  // short press, top of the screen
-  if(event->button == 1 && event->y < 50){
-    // popup menu
+static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointer box){
+  D printf("event-type: %i\n", event->type);
+  D printf("event-button: %i\n", event->button);
+  // ignore any motion events (i think we don't need selecting text as one finger motion scrolls buffer)
+  if(event->type == GDK_MOTION_NOTIFY) return TRUE;
+  // right click
+  if(event->button == 2){
+    // ignore right button click to disable paste (quite messy on kindle)
+    if(event->type == GDK_BUTTON_PRESS) return TRUE;
+    // popup menu on button release
     GtkWidget *menu, *fontup_item, *fontdown_item, *color_item, /* *rotate_item,*/ *reset_item, *kb_item, *quit_item;
     menu = gtk_menu_new();
     fontup_item = gtk_menu_item_new_with_label("Font increase");
@@ -353,8 +360,9 @@ static gboolean button_press(GtkWidget *terminal, GdkEventButton *event, gpointe
 
     GdkEventButton *bevent = (GdkEventButton *) event;
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, bevent->button, bevent->time);
+    return TRUE;
   }
-  return TRUE;
+  return FALSE;
 }
 
 void widget_destroy(GtkWidget *widget, gpointer data){
@@ -486,7 +494,9 @@ int main(int argc, char **argv){
   g_signal_connect(window, "destroy", G_CALLBACK(widget_destroy), NULL);
   g_signal_connect(window, "delete_event", G_CALLBACK(clean_and_exit), NULL);
   g_signal_connect(terminal, "child-exited", G_CALLBACK(terminal_exit), NULL);
-  g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_press), (gpointer) vbox);
+  g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), (gpointer) vbox);
+  g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), (gpointer) vbox);
+  g_signal_connect(terminal, "motion-notify-event", G_CALLBACK(button_event), (gpointer) vbox);
   g_signal_connect(keyboard_box, "size-request", G_CALLBACK(set_box_size), NULL);
   g_signal_connect_swapped(window, "size-request", G_CALLBACK(set_box_size), terminal_fixed);
   g_signal_connect_swapped(window, "size-request", G_CALLBACK(set_box_size), keyboard_fixed);
