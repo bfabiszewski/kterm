@@ -50,9 +50,6 @@
 #define VTE_SCHEME_LIGHT 0
 #define VTE_SCHEME_DARK 1
 
-// menu button
-#define MENU_BUTTON_SIZE 20
-
 extern unsigned int debug;
 #define D if(debug) 
 

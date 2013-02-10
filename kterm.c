@@ -30,8 +30,6 @@
 kterm_conf *conf;
 unsigned int debug = FALSE;
 
-GtkWidget *terminal; // global so we can use it in the menu
-
 void clean_and_exit(){
   kill(-getpid(), SIGTERM);  // cleanup children
   exit(0); 
@@ -245,12 +243,7 @@ void set_box_size(GtkWidget *box){
     box_list = gtk_container_get_children(GTK_CONTAINER(box));
     box_child = g_list_first(box_list);
     for (box_child = box_list; box_child != NULL; box_child = box_child->next){
-      if(!strncmp(gtk_widget_get_name(GTK_WIDGET(box_child->data)), "menuButton", 10)){
-        gtk_fixed_move(GTK_FIXED(box), GTK_WIDGET(box_child->data), screen_width - MENU_BUTTON_SIZE, 0);
-      }
-      else{
-        gtk_widget_set_size_request(GTK_WIDGET(box_child->data), screen_width, term_height);
-      }
+      gtk_widget_set_size_request(GTK_WIDGET(box_child->data), screen_width, term_height);
     }
     g_list_free(box_list);
     g_list_free(box_child);
@@ -326,9 +319,9 @@ void toggle_keyboard(GtkWidget *widget, gpointer box){
 }
 
 
-static gboolean button_press(GtkWidget *menu_button, GdkEventButton *event, gpointer box){
+static gboolean button_press(GtkWidget *terminal, GdkEventButton *event, gpointer box){
   // short press, top of the screen
-  if(event->button == 1){
+  if(event->button == 1 && event->y < 50){
     // popup menu
     GtkWidget *menu, *fontup_item, *fontdown_item, *color_item, /* *rotate_item,*/ *reset_item, *kb_item, *quit_item;
     menu = gtk_menu_new();
@@ -385,7 +378,7 @@ void usage(){
 }
 
 int main(int argc, char **argv){ 
-  GtkWidget *window, *menu_button, *vbox;
+  GtkWidget *window, *terminal, *vbox;
   GtkWidget *socket, *keyboard_box;
   unsigned long kb_xid;
 
@@ -447,9 +440,8 @@ int main(int argc, char **argv){
   // window 
   //  \- vbox
   //      \- terminal_fixed  \- keyboard_fixed
-  //         \- menu_button     \- keyboard_box
-  //         \- terminal
-  //
+  //         \- terminal        \- keyboard_box
+  //                 
   // main window
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(window), TITLE);
@@ -466,13 +458,6 @@ int main(int argc, char **argv){
   terminal = vte_terminal_new();
   gtk_widget_set_name(terminal, "termBox");
   gtk_fixed_put(GTK_FIXED(terminal_fixed), terminal, 0, 0);
-
-  // menu button
-  menu_button = gtk_button_new_with_label("Menu");
-  gtk_widget_set_name(menu_button, "menuButton");
-  gtk_fixed_put(GTK_FIXED(terminal_fixed), menu_button, 0, 0);
-  gtk_widget_set_size_request(menu_button, MENU_BUTTON_SIZE, MENU_BUTTON_SIZE);
-
   set_box_size(terminal_fixed);
   set_terminal_colors(terminal, conf->color_scheme);
   vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), VTE_SCROLLBACK_LINES);
@@ -501,7 +486,7 @@ int main(int argc, char **argv){
   g_signal_connect(window, "destroy", G_CALLBACK(widget_destroy), NULL);
   g_signal_connect(window, "delete_event", G_CALLBACK(clean_and_exit), NULL);
   g_signal_connect(terminal, "child-exited", G_CALLBACK(terminal_exit), NULL);
-  g_signal_connect(menu_button, "button-press-event", G_CALLBACK(button_press), (gpointer) vbox);
+  g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_press), (gpointer) vbox);
   g_signal_connect(keyboard_box, "size-request", G_CALLBACK(set_box_size), NULL);
   g_signal_connect_swapped(window, "size-request", G_CALLBACK(set_box_size), terminal_fixed);
   g_signal_connect_swapped(window, "size-request", G_CALLBACK(set_box_size), keyboard_fixed);
