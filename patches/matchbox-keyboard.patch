@@ -1,0 +1,43 @@
+diff -rupN matchbox-keyboard.org/src/config-parser.c matchbox-keyboard.5.3/src/config-parser.c
+--- matchbox-keyboard.org/src/config-parser.c	2008-09-21 14:23:02.000000000 +0200
++++ matchbox-keyboard.5.3/src/config-parser.c	2013-01-16 15:00:38.000000000 +0100
+@@ -359,8 +359,19 @@ config_handle_key_subtag(MBKeyboardConfi
+       if (val[6] != '/')
+ 	{
+ 	  /* Relative, rather than absolute path, try pkddatadir and home */
+-	  char buf[512];
+-	  snprintf(buf, 512, "%s/%s", PKGDATADIR, &val[6]);
++	  char buf[512], path[512], *s;
++	  /* Try MB_KBD_CONFIG env variable */
++	  if (getenv("MB_KBD_CONFIG"))
++          {
++            snprintf(path, 512, "%s", getenv("MB_KBD_CONFIG"));
++            if ((s = strrchr(path, '/')) != NULL)
++            { 
++              *s = '\0';
++              snprintf(buf, 512, "%s/%s", path, &val[6]);
++            }
++          }
++	  if (!util_file_readable(buf))
++	    snprintf(buf, 512, "%s/%s", PKGDATADIR, &val[6]);
+ 
+ 	  if (!util_file_readable(buf))
+ 	    snprintf(buf, 512, "%s/.matchbox/%s", getenv("HOME"), &val[6]);
+diff -rupN matchbox-keyboard.org/src/matchbox-keyboard.c matchbox-keyboard.5.3/src/matchbox-keyboard.c
+--- matchbox-keyboard.org/src/matchbox-keyboard.c	2008-09-21 14:23:02.000000000 +0200
++++ matchbox-keyboard.5.3/src/matchbox-keyboard.c	2013-01-14 23:20:33.000000000 +0100
+@@ -45,11 +45,11 @@ mb_kbd_new (int argc, char **argv)
+   kb = util_malloc0(sizeof(MBKeyboard));
+ 
+   kb->key_border = 1;
+-  kb->key_pad    = 2;
++  kb->key_pad    = 0;
+   kb->key_margin = 0;
+ 
+-  kb->col_spacing = 5;
+-  kb->row_spacing = 5;
++  kb->col_spacing = 0;
++  kb->row_spacing = 0;
+ 
+   kb->font_family  = strdup("sans");
+   kb->font_pt_size = 5;
