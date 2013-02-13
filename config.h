@@ -59,6 +59,7 @@ typedef struct {
   unsigned int color_scheme;
   char font_family[50];
   unsigned int font_size;
+  char kb_conf_path[4096];
 } kterm_conf;
 
 kterm_conf *parse_config();

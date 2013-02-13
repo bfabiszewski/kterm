@@ -33,7 +33,7 @@ kterm_conf *parse_config(){
   char conf_path[4096];
   char self[4096], *s;
 
-  // if kb config is not found
+  // if kterm config is not found
   if(access(CONFIG_FULL_PATH, R_OK) == 0){
     snprintf(conf_path, sizeof(conf_path), "%s", CONFIG_FULL_PATH);
   } else {
@@ -55,6 +55,7 @@ kterm_conf *parse_config(){
   conf->color_scheme = VTE_SCHEME_LIGHT;
   conf->font_size = VTE_FONT_SIZE;
   snprintf(conf->font_family, sizeof(conf->font_family), "%s", VTE_FONT_FAMILY);
+  snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", MB_KBD_FULL_PATH);
 
   if((fp = fopen(conf_path, "r")) == NULL){
     D printf("No config file\n"); 
@@ -80,6 +81,12 @@ kterm_conf *parse_config(){
     else if(!strncmp(buf, "font_size", 9)){
       sscanf(buf, "font_size = %u", &conf->font_size);
       D printf("font_size = %u\n", conf->font_size);
+    }
+    else if(!strncmp(buf, "kb_conf_path", 12)){
+      char str2[4096];
+      sscanf(buf, "kb_conf_path = \"%[^\"\n\r]\"", str2); // need double quotes around path
+      snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", str2);
+      D printf("kb_conf_path = %s\n", conf->kb_conf_path);
     }
   }
   

@@ -58,7 +58,12 @@ unsigned long launch_keyboard(){
   char self[4096], *s;
 
   // if kb config is not found
-  if(access(MB_KBD_FULL_PATH, R_OK) == 0){
+  if(access(conf->kb_conf_path, R_OK) == 0){   // conf->kb_conf_path defaults to MB_KBD_FULL_PATH in parse_config.c
+    snprintf(kb_conf_path, sizeof(kb_conf_path), "%s", conf->kb_conf_path);
+  }
+  // if MB_KBD_FULL_PATH doesn't exist and a path wasn't set via conf or command line,
+  // this will end up checking MB_KBD_FULL_PATH twice:
+  else if(access(MB_KBD_FULL_PATH, R_OK) == 0){
     snprintf(kb_conf_path, sizeof(kb_conf_path), "%s", MB_KBD_FULL_PATH);
   } else {
     // set path to kterm binary's path
@@ -380,6 +385,7 @@ void usage(){
    printf("        -f <family>  - font family\n");
    printf("        -h           - show this message\n");
    printf("        -k <0|1>     - keyboard off/on\n");
+   printf("        -l <path>    - keyboard layout config path\n");
    printf("        -s <size>    - font size\n");
    printf("        -v           - print version and exit\n");
    exit(0);
@@ -397,7 +403,7 @@ int main(int argc, char **argv){
   char *argbuf;
   int c, i;
   cargv[0]=NULL;
-  while((c = getopt(argc, argv, "c:de:f:hk:s:v")) != -1){
+  while((c = getopt(argc, argv, "c:de:f:hk:l:s:v")) != -1){
     switch(c){
       case 'd':
         debug = TRUE;
@@ -419,6 +425,9 @@ int main(int argc, char **argv){
       case 'k':
         i = atoi(optarg);
         if ((i == 0) | (i == 1)) conf->kb_on = i;
+        break;
+      case 'l':
+        snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", optarg);
         break;
       case 's':
         i = atoi(optarg);
