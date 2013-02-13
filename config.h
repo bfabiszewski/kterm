@@ -17,7 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
  
-#define VERSION "0.5"
+#define VERSION "0.6"
 // kindle title scheme
 #define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:U" 
 // matchbox keyboard binary
