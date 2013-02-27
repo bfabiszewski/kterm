@@ -95,15 +95,20 @@ unsigned long launch_keyboard(){
   D printf("kb_env: %s\n", kb_env);
   putenv(kb_env);
 
-  pipe(stdout_pipe);
-  pipe(stdin_pipe);
+  if(pipe(stdout_pipe) == -1 || pipe(stdin_pipe) == -1){
+    perror("Pipe failed\n");
+    exit(1);
+  }
 
   switch(fork()){
     case 0:
       {
 	// close the child process' STDOUT
 	close(1);
-	dup(stdout_pipe[1]);
+	if(dup(stdout_pipe[1]) == -1){
+          perror("Dup failed\n");
+          exit(1);
+        }
 	close(stdout_pipe[0]);
 	close(stdout_pipe[1]);
         execlp("/bin/sh", "sh", "-c", kb_bin_path, NULL);
