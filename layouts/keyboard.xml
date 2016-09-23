@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Patrick de Groot - www.chinesegadgets.net -->
+<!-- modified for kindle by baf -->
+<!-- modified for PW by cubemike99 -->
+<!-- modified for layout by DT -->
+<keyboard>
+  <options>
+    <!-- not yet implemented -->
+  </options>
+  <layout id="default keyboard">
+    <row>
+      <key>
+        <default display="image:img/esc.png" action="escape" />
+      </key>
+      <key>
+        <default display="image:img/1.png" action="1" />
+        <shifted display="image:img/exclamation.png" action="!" />
+        <mod1 display="image:img/f1.png" action="f1" />
+        <mod2 display="image:img/sup1.png" action="¹" />
+      </key>
+      <key>
+        <default display="image:img/2.png" action="2" />
+        <shifted display="image:img/at.png" action="@" />
+        <mod1 display="image:img/f2.png" action="f2" />
+        <mod2 display="image:img/sup2.png" action="²" />
+      </key>
+      <key>
+        <default display="image:img/3.png" action="3" />
+        <shifted display="image:img/hash.png" action="#" />
+        <mod1 display="image:img/f3.png" action="f3" />
+        <mod2 display="image:img/euro.png" action="€" />
+      </key>
+      <key>
+        <default display="image:img/4.png" action="4" />
+        <shifted display="image:img/dollar.png" action="$" />
+        <mod1 display="image:img/f4.png" action="f4" />
+        <mod2 display="image:img/pound.png" action="£" />
+      </key>
+      <key>
+        <default display="image:img/5.png" action="5" />
+        <shifted display="image:img/percent.png" action="%" />
+        <mod1 display="image:img/f5.png" action="f5" />
+        <mod2 display="image:img/yen.png" action="¥" />
+      </key>
+      <key>
+        <default display="image:img/6.png" action="6" />
+        <shifted display="image:img/caret.png" action="^" />
+        <mod1 display="image:img/f6.png" action="f6" />
+        <mod2 display="image:img/cent.png" action="¢" />
+      </key>
+      <key>
+        <default display="image:img/7.png" action="7" />
+        <shifted display="image:img/amp.png" action="&amp;" />
+        <mod1 display="image:img/f7.png" action="f7" />
+        <mod2 display="image:img/iexcl.png" action="¡" />
+      </key>
+      <key>
+        <default display="image:img/8.png" action="8" />
+        <shifted display="image:img/asterisk.png" action="*" />
+        <mod1 display="image:img/f8.png" action="f8" />
+        <mod2 display="image:img/iquest.png" action="¿" />
+      </key>
+      <key>
+        <default display="image:img/9.png" action="9" />
+        <shifted display="image:img/roundbracketleft.png" action="(" />
+        <mod1 display="image:img/f9.png" action="f9" />
+        <mod2 display="image:img/para.png" action="¶" />
+      </key>
+      <key>
+        <default display="image:img/0.png" action="0" />
+        <shifted display="image:img/roundbracketright.png" action=")" />
+        <mod1 display="image:img/f10.png" action="f10" />
+        <mod2 display="image:img/sect.png" action="§" />
+      </key>
+      <key>
+        <default display="image:img/minus.png" action="-" />
+        <shifted display="image:img/underscore.png" action="_" />
+        <mod1 display="image:img/f11.png" action="f11" />
+        <mod2 display="image:img/micro.png" action="µ" />
+      </key>
+      <key>
+        <default display="image:img/plus.png" action="+" />
+        <shifted display="image:img/equals.png" action="=" />
+        <mod1 display="image:img/f12.png" action="f12" />
+        <mod2 display="image:img/deg.png" action="°" />
+      </key>
+      <key width="1500" fill="true">
+        <default display="image:img/back.png" action="backspace" />
+        <shifted display="image:img/del.png" action="delete" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" obey-caps="true" fill="true">
+        <default display="image:img/tab.png" action="tab" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/q.png" action="q" />
+        <shifted display="image:img/cq.png" action="Q" />
+        <mod1 display="image:img/agrave.png" action="à" />
+        <mod2 display="image:img/cagrave.png" action="À" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/w.png" action="w" />
+        <shifted display="image:img/cw.png" action="W" />
+        <mod1 display="image:img/aacute.png" action="á" />
+        <mod2 display="image:img/caacute.png" action="Á" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/e.png" action="e" />
+        <shifted display="image:img/ce.png" action="E" />
+        <mod1 display="image:img/atilde.png" action="ã" />
+        <mod2 display="image:img/catilde.png" action="Ã" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/r.png" action="r" />
+        <shifted display="image:img/cr.png" action="R" />
+        <mod1 display="image:img/acirc.png" action="â" />
+        <mod2 display="image:img/cacirc.png" action="Â" />
+      </key>
+      <key width="1000" obey-caps="true">
+        <default display="image:img/t.png" action="t" />
+        <shifted display="image:img/ct.png" action="T" />
+        <mod1 display="image:img/auml.png" action="ä" />
+        <mod2 display="image:img/cauml.png" action="Ä" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/y.png" action="y" />
+        <shifted display="image:img/cy.png" action="Y" />
+        <mod1 display="image:img/aring.png" action="å" />
+        <mod2 display="image:img/caring.png" action="Å" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/u.png" action="u" />
+        <shifted display="image:img/cu.png" action="U" />
+        <mod1 display="image:img/aelig.png" action="æ" />
+        <mod2 display="image:img/caelig.png" action="Æ" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/i.png" action="i" />
+        <shifted display="image:img/ci.png" action="I" />
+        <mod1 display="image:img/ccedil.png" action="ç" />
+        <mod2 display="image:img/cccedil.png" action="Ç" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/o.png" action="o" />
+        <shifted display="image:img/co.png" action="O" />
+        <mod1 display="image:img/egrave.png" action="è" />
+        <mod2 display="image:img/cegrave.png" action="È" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/p.png" action="p" />
+        <shifted display="image:img/cp.png" action="P" />
+        <mod1 display="image:img/eacute.png" action="é" />
+        <mod2 display="image:img/ceacute.png" action="É" />
+      </key>
+      <key>
+        <default display="image:img/squarebracketleft.png" action="[" />
+        <shifted display="image:img/curlybracketleft.png" action="{" />
+        <mod1 display="image:img/ecirc.png" action="ê" />
+        <mod2 display="image:img/cecirc.png" action="Ê" />
+      </key>
+      <key>
+        <default display="image:img/squarebracketright.png" action="]" />
+        <shifted display="image:img/curlybracketright.png" action="}" />
+        <mod1 display="image:img/euml.png" action="ë" />
+        <mod2 display="image:img/ceuml.png" action="Ë" />
+      </key>
+      <key>
+        <default display="image:img/backslash.png" action="\" />
+        <shifted display="image:img/pipe.png" action="|" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img/capslk.png" action="modifier:caps" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/a.png" action="a" />
+        <shifted display="image:img/ca.png" action="A" />
+        <mod1 display="image:img/igrave.png" action="ì" />
+        <mod2 display="image:img/cigrave.png" action="Ì" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/s.png" action="s" />
+        <shifted display="image:img/cs.png" action="S" />
+        <mod1 display="image:img/iacute.png" action="í" />
+        <mod2 display="image:img/ciacute.png" action="Í" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/d.png" action="d" />
+        <shifted display="image:img/cd.png" action="D" />
+        <mod1 display="image:img/icirc.png" action="î" />
+        <mod2 display="image:img/cicirc.png" action="Î" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/f.png" action="f" />
+        <shifted display="image:img/cf.png" action="F" />
+        <mod1 display="image:img/iuml.png" action="ï" />
+        <mod2 display="image:img/ciuml.png" action="Ï" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/g.png" action="g" />
+        <shifted display="image:img/cg.png" action="G" />
+        <mod1 display="image:img/ntilde.png" action="ñ" />
+        <mod2 display="image:img/cntilde.png" action="Ñ" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/h.png" action="h" />
+        <shifted display="image:img/ch.png" action="H" />
+        <mod1 display="image:img/ograve.png" action="ò" />
+        <mod2 display="image:img/cograve.png" action="Ò" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/j.png" action="j" />
+        <shifted display="image:img/cj.png" action="J" />
+        <mod1 display="image:img/oacute.png" action="ó" />
+        <mod2 display="image:img/coacute.png" action="Ó" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/k.png" action="k" />
+        <shifted display="image:img/ck.png" action="K" />
+        <mod1 display="image:img/otilde.png" action="õ" />
+        <mod2 display="image:img/cotilde.png" action="Õ" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/l.png" action="l" />
+        <shifted display="image:img/cl.png" action="L" />
+        <mod1 display="image:img/ocirc.png" action="ô" />
+        <mod2 display="image:img/cocirc.png" action="Ô" />
+      </key>
+      <key>
+        <default display="image:img/simicolon.png" action=";" />
+        <shifted display="image:img/colon.png" action=":" />
+        <mod1 display="image:img/ouml.png" action="ö" />
+        <mod2 display="image:img/couml.png" action="Ö" />
+      </key>
+      <key>
+        <default display="image:img/apostrophe.png" action="'" />
+        <shifted display="image:img/quot.png" action="&quot;" />
+        <mod1 display="image:img/oslash.png" action="ø" />
+        <mod2 display="image:img/coslash.png" action="Ø" />
+      </key>
+      <key width="2000">
+        <default display="image:img/return2.png" action="return" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img/shift.png" action="modifier:shift" />
+      </key>
+      <key>
+        <default display="image:img/grave.png" action="`" />
+        <shifted display="image:img/tilde.png" action="~" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/z.png" action="z" />
+        <shifted display="image:img/cz.png" action="Z" />
+        <mod1 display="image:img/szlig.png" action="ß" />
+        <mod2 display="image:img/cugrave.png" action="Ù" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/x.png" action="x" />
+        <shifted display="image:img/cx.png" action="X" />
+        <mod1 display="image:img/ugrave.png" action="ù" />
+        <mod2 display="image:img/cuacute.png" action="Ú" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/c.png" action="c" />
+        <shifted display="image:img/cc.png" action="C" />
+        <mod1 display="image:img/uacute.png" action="ú" />
+        <mod2 display="image:img/cucirc.png" action="Û" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/v.png" action="v" />
+        <shifted display="image:img/cv.png" action="V" />
+        <mod1 display="image:img/ucirc.png" action="û" />
+        <mod2 display="image:img/cuuml.png" action="Ü" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/b.png" action="b" />
+        <shifted display="image:img/cb.png" action="B" />
+        <mod1 display="image:img/uuml.png" action="ü" />
+        <mod2 display="image:img/cyacute.png" action="Ý" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/n.png" action="n" />
+        <shifted display="image:img/cn.png" action="N" />
+        <mod1 display="image:img/yacute.png" action="ý" />
+        <mod2 display="image:img/laquo.png" action="«" />
+      </key>
+      <key obey-caps="true">
+        <default display="image:img/m.png" action="m" />
+        <shifted display="image:img/cm.png" action="M" />
+        <mod1 display="image:img/yuml.png" action="ÿ" />
+        <mod2 display="image:img/raquo.png" action="»" />
+      </key>
+      <key>
+        <default display="image:img/comma.png" action="," />
+        <shifted display="image:img/lt.png" action="&lt;" />
+      </key>
+      <key>
+        <default display="image:img/period.png" action="." />
+        <shifted display="image:img/gt.png" action="&gt;" />
+      </key>
+      <key>
+        <default display="image:img/slash.png" action="/" />
+        <shifted display="image:img/questionmark.png" action="?" />
+      </key>
+      <key>
+        <default display="image:img/up.png" action="up" />
+        <shifted display="image:img/pgup.png" action="pageup" />
+      </key>
+      <key>
+        <default display="image:img/shift.png" action="modifier:shift" />
+      </key>
+    </row>
+    <row>
+      <key width="1500">
+        <default display="image:img/ctrl.png" action="modifier:ctrl" />
+      </key>
+      <key>
+        <default display="image:img/alt.png" action="modifier:alt" />
+      </key>
+      <key>
+        <default display="image:img/sym1.png" action="modifier:mod1" />
+      </key>
+      <key fill="true">
+        <default display="" action="space" />
+      </key>
+      <key>
+        <default display="image:img/sym2.png" action="modifier:mod2" />
+      </key>
+      <key>
+        <default display="image:img/left.png" action="left" />
+        <shifted display="image:img/home.png" action="home" />
+      </key>
+      <key>
+        <default display="image:img/down.png" action="down" />
+        <shifted display="image:img/pgdn.png" action="pagedown" />
+      </key>
+      <key>
+        <default display="image:img/right.png" action="right" />
+        <shifted display="image:img/end.png" action="end" />
+      </key>
+    </row>
+  </layout>
+</keyboard>

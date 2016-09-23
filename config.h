@@ -1,6 +1,6 @@
 /* config.h
  *
- * Copyright (C) 2013 Bartek Fabiszewski (www.fabiszewski.net)
+ * Copyright (C) 2013-2016 Bartek Fabiszewski (www.fabiszewski.net)
  *
  * This is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by
@@ -16,17 +16,25 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
-#define VERSION "0.6"
+
+#ifndef config_h
+#define config_h
+
+#include <gtk/gtk.h>
+
+#define VERSION "2.0"
+#ifdef KINDLE
 // kindle title scheme
-#define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:U" 
-// matchbox keyboard binary
-#define KB_FULL_PATH "/usr/bin/matchbox-keyboard"
-#define KB_BINARY "matchbox-keyboard"
-#define KB_ARGS " --xid"
-// matchbox keyboard config path
-#define MB_KBD_FULL_PATH "/usr/share/matchbox-keyboard/layouts/keyboard.xml"
-#define MB_KBD_CONFIG "../layouts/keyboard.xml"
+#define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL" 
+// middle button on kindle
+#define BUTTON_MENU 2
+#else
+#define TITLE "kterm " VERSION
+#define BUTTON_MENU 3
+#endif
+// keyboard config path
+#define KB_FULL_PATH "/etc/kterm/layouts/keyboard.xml"
+#define KB_CONFIG "../layouts/keyboard.xml"
 // matchbox-keyboard takes 1/3 of the screen height
 #define KB_HEIGHT_FACTOR 3.05
 // config file
@@ -38,6 +46,17 @@
 // boxes
 #define KB_BOX 0
 #define TERM_BOX 1
+
+#ifndef MAX 
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
+#define TERM_ARGS_MAX 50
+
 
 // terminal scrollback size
 #define VTE_SCROLLBACK_LINES 200
@@ -51,16 +70,19 @@
 #define VTE_SCHEME_DARK 1
 
 extern unsigned int debug;
-#define D if(debug) 
+#define D if(debug)
+
+#define UNUSED(x) (void)(x)
 
 // parse_config
 typedef struct {
-  unsigned int kb_on;
-  unsigned int color_scheme;
-  char font_family[50];
-  unsigned int font_size;
-  char kb_conf_path[4096];
-} kterm_conf;
+  guint kb_on;
+  guint color_scheme;
+  gchar font_family[50];
+  guint font_size;
+  gchar kb_conf_path[PATH_MAX];
+} KTconf;
 
-kterm_conf *parse_config();
+KTconf *parse_config();
 
+#endif
