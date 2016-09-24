@@ -22,7 +22,9 @@
 
 #include <gtk/gtk.h>
 
+#ifndef VERSION
 #define VERSION "2.0"
+#endif
 #ifdef KINDLE
 // kindle title scheme
 #define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL" 
@@ -33,13 +35,15 @@
 #define BUTTON_MENU 3
 #endif
 // keyboard config path
-#define KB_FULL_PATH "/etc/kterm/layouts/keyboard.xml"
-#define KB_CONFIG "../layouts/keyboard.xml"
+#ifndef SYSCONFDIR
+#define SYSCONFDIR "/etc/local"
+#endif
+#define KB_FULL_PATH SYSCONFDIR "/kterm/layouts/keyboard.xml"
 // matchbox-keyboard takes 1/3 of the screen height
 #define KB_HEIGHT_FACTOR 3.05
 // config file
-#define CONFIG_FULL_PATH "/etc/kterm/kterm.conf"
 #define CONFIG_FILE "kterm.conf"
+#define CONFIG_FULL_PATH SYSCONFDIR "/kterm/" CONFIG_FILE
 // resize font
 #define FONT_UP 0
 #define FONT_DOWN 1

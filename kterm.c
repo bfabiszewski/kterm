@@ -19,13 +19,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define _XOPEN_SOURCE 500
-#define _POSIX_SOURCE 1
 #include <gtk/gtk.h>
 #ifdef KINDLE
 #include <gdk/gdkx.h>
 #endif
 #include <vte/vte.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
