@@ -338,12 +338,19 @@ static void inject_gtkrc(void) {
 }
 #endif
 
-static void usage() {
-    printf("kterm %s\n", VERSION);
+static void version(void) {
+    printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n",
+           VERSION, VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION,
+           GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
+    exit(0);
+}
+
+static void usage(void) {
     printf("Usage: kterm [OPTIONS]\n");
     printf("        -c <0|1>     - color scheme (0 light, 1 dark)\n");
     printf("        -d           - debug mode\n");
     printf("        -e <command> - execute command in kterm\n");
+    printf("        -E <var>     - set environment variable\n");
     printf("        -f <family>  - font family\n");
     printf("        -h           - show this message\n");
     printf("        -k <0|1>     - keyboard off/on\n");
@@ -353,7 +360,7 @@ static void usage() {
     exit(0);
 }
 
-static gboolean setup_terminal(GtkWidget *terminal, gchar *command) {
+static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv) {
     gboolean ret = TRUE;
     gchar *argv[TERM_ARGS_MAX] = { NULL };
     gint argc = 0;
@@ -403,14 +410,24 @@ int main(int argc, char **argv) {
     gint c = -1;
     gint i = 0;
     gchar *command = NULL;
-
-    while((c = getopt(argc, argv, "c:de:f:hk:l:s:v")) != -1) {
+    gchar *envv[TERM_ARGS_MAX] = { NULL };
+    gint envc = 0;
+#ifdef KINDLE
+    // set short prompt
+    envv[envc++] = "PS1=[\\W]\\$ ";
+#endif
+    while((c = getopt(argc, argv, "c:de:E:f:hk:l:s:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;
                 break;
             case 'e':
                 command = optarg;
+                break;
+            case 'E':
+                if (envc < TERM_ARGS_MAX - 1) {
+                    envv[envc++] = optarg;
+                }
                 break;
             case 'c':
                 i = atoi(optarg);
@@ -431,8 +448,10 @@ int main(int argc, char **argv) {
                 snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
                 break;
             case 'h':
-            case 'v':
                 usage();
+                break;
+            case 'v':
+                version();
                 break;
         }
     }
@@ -476,7 +495,7 @@ int main(int argc, char **argv) {
     gtk_box_pack_end(GTK_BOX(vbox), keyboard_box, FALSE, FALSE, 0);
     
     GtkWidget *terminal = vte_terminal_new();
-    if G_UNLIKELY(!setup_terminal(terminal, command)) {
+    if G_UNLIKELY(!setup_terminal(terminal, command, envv)) {
         clean_on_exit(keyboard);
         exit(0);
     }
