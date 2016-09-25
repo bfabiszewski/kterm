@@ -338,13 +338,13 @@ void keyboard_keys_free(Key **keys) {
         keyboard_key_free(keys[i]);
     }
     g_free(keys);
-    keys = NULL;
 }
 
-void keyboard_free(Keyboard *keyboard) {
-    if (keyboard) {
-        keyboard_keys_free(keyboard->keys);
-        g_free(keyboard);
-        keyboard = NULL;
+void keyboard_free(Keyboard **keyboard) {
+    if (keyboard && *keyboard) {
+        keyboard_keys_free((*keyboard)->keys);
+        (*keyboard)->keys = NULL;
+        g_free(*keyboard);
+        *keyboard = NULL;
     }
 }

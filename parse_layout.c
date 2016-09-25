@@ -439,7 +439,7 @@ Keyboard * build_layout(GtkWidget *parent) {
     GMarkupParseContext *context = g_markup_parse_context_new(&parser, 0, &state, NULL);
     if G_UNLIKELY(!context) {
         D printf("g_markup_parse_context_new failed\n");
-        keyboard_free(keyboard);
+        keyboard_free(&keyboard);
         state_cleanup(&state, TRUE);
         return NULL;
     }
@@ -455,7 +455,7 @@ Keyboard * build_layout(GtkWidget *parent) {
     D printf("Parsed %d keys in %d rows\n", keyboard->key_count, keyboard->row_count);
     if G_UNLIKELY(error){
         D printf("Parser error: %s\n", error->message);
-        keyboard_free(keyboard);
+        keyboard_free(&keyboard);
     } else {
         keyboard->keys = g_realloc(keyboard->keys, keyboard->key_count * sizeof(Key*));
     }

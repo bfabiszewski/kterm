@@ -55,7 +55,7 @@ static void clean_on_exit(Keyboard *keyboard) {
 #ifdef KINDLE
     XUngrabKeyboard(GDK_DISPLAY(), CurrentTime);
 #endif
-    keyboard_free(keyboard);
+    keyboard_free(&keyboard);
     g_free(conf);
 }
 
