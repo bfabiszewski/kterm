@@ -255,7 +255,7 @@ static guint parser_button_label(Key *key, const gchar *attribute_value, KBtype 
         if (kb_type == KBT_DEFAULT) {
             gtk_button_set_label(GTK_BUTTON(key->button), key->label[kb_type]);
         }
-        if (!key->width) {
+        if (!key->width && g_utf8_strlen(key->label[kb_type], -1) == 1) {
             PangoLayout *layout = gtk_widget_create_pango_layout(key->button, key->label[kb_type]);
             pango_layout_get_pixel_size(layout, &width, NULL);
             g_object_unref(layout);
