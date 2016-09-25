@@ -36,12 +36,12 @@ typedef enum {
 
 struct kbsymlookup {
     guint keyval;
-    char *name;
+    gchar *name;
 };
 
 struct kbmodlookup {
     GdkModifierType modifier;
-    char *name;
+    gchar *name;
 };
 
 #define KB_MODIFIERS_SET_MASK (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK)
@@ -81,7 +81,7 @@ typedef struct Keyboard {
 gboolean keyboard_event(GtkWidget *button, GdkEvent *ev, Key *key);
 void keyboard_set_widths(Keyboard *keyboard);
 Keyboard * build_layout(GtkWidget *parent);
-void keyboard_free(Keyboard *keyboard);
+void keyboard_free(Keyboard **keyboard);
 void keyboard_key_free(Key *key);
 
 #endif /* keyboard_h */

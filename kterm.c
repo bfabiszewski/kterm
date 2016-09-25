@@ -39,9 +39,9 @@
 #endif
 
 KTconf *conf;
-unsigned int debug = FALSE;
+gboolean debug = FALSE;
 
-static void exit_on_signal(int signo) {
+static void exit_on_signal(gint signo) {
     D printf("exiting on signal %i\n", signo);
     if (gtk_main_level()) {
         gtk_main_quit();
@@ -64,7 +64,7 @@ static void terminal_exit(void) {
     gtk_main_quit();
 }
 
-static void install_signal_handlers() {
+static void install_signal_handlers(void) {
     signal(SIGCHLD, SIG_IGN); // kernel should handle zombies
     signal(SIGINT, exit_on_signal);
     signal(SIGQUIT, exit_on_signal);
@@ -83,6 +83,9 @@ static void set_terminal_font(VteTerminal *terminal, const gchar *font_family, g
 static void resize_font(VteTerminal *terminal, guint mod) {
     const PangoFontDescription *pango_desc = vte_terminal_get_font(VTE_TERMINAL(terminal));
     gchar *pango_name = pango_font_description_to_string(pango_desc);
+    if G_UNLIKELY(!pango_name) {
+        return;
+    }
     gchar *size_offset = strrchr(pango_name, ' ');
     if (size_offset) {
         *size_offset = '\0';
@@ -110,7 +113,7 @@ static void fontdown(GtkWidget *widget, gpointer terminal) {
     resize_font(terminal, FONT_DOWN);
 }
 
-static void set_terminal_colors(GtkWidget *terminal, unsigned int scheme) {
+static void set_terminal_colors(GtkWidget *terminal, gboolean scheme) {
 #if GTK_CHECK_VERSION(3,14,0)
     // light background
     GdkRGBA palette_light[8] = {{ 0, 0, 0, 1 }, // black
@@ -156,10 +159,10 @@ static void set_terminal_colors(GtkWidget *terminal, unsigned int scheme) {
     GdkColor *palette;
     GdkColor color_white = { 0, 0xffff, 0xffff, 0xffff };
     GdkColor color_black = { 0, 0x0000, 0x0000, 0x0000 };
-    GdkColor color_bg, color_fg;
     GdkColor color_dim = { 0, 0x8888, 0x8888, 0x8888 };
+    GdkColor color_bg, color_fg;
 #endif
-    switch(scheme) {
+    switch (scheme) {
         default:
         case VTE_SCHEME_LIGHT:
             palette = palette_light;
@@ -181,12 +184,12 @@ static void set_terminal_colors(GtkWidget *terminal, unsigned int scheme) {
     vte_terminal_set_color_bold(VTE_TERMINAL(terminal), &color_fg);
     vte_terminal_set_color_cursor(VTE_TERMINAL(terminal), NULL);
     vte_terminal_set_color_highlight(VTE_TERMINAL(terminal), NULL);
-    conf->color_scheme = scheme;
+    conf->color_reversed = scheme;
 }
 
 static void reverse_colors(GtkWidget *widget, gpointer terminal) {
     UNUSED(widget);
-    set_terminal_colors(terminal, conf->color_scheme^1);
+    set_terminal_colors(terminal, !conf->color_reversed);
 }
 
 static gboolean set_box_size(GtkWidget *box, GdkEvent *event, void *data) {
@@ -196,7 +199,7 @@ static gboolean set_box_size(GtkWidget *box, GdkEvent *event, void *data) {
     gint screen_width = gdk_screen_get_width(screen);
     gint box_height = (event) ? ((GdkEventConfigure *) event)->height : 0;
     gint box_width = (event) ? ((GdkEventConfigure *) event)->width : 0;
-    gint kb_height = (conf->kb_on) ? (int) (screen_height/KB_HEIGHT_FACTOR) : 0;
+    gint kb_height = (conf->kb_on) ? (gint) (screen_height/KB_HEIGHT_FACTOR) : 0;
     D printf("box size: %ix%i\n", box_width, box_height);
     static gint saved_width = -1;
     if (box_width != saved_width) {
@@ -215,28 +218,27 @@ static void lipc_rotate() {
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
     gint screen_width = gdk_screen_get_width(screen);
-    const char *command;
+    const gchar *command;
     if (screen_width > screen_height) {
         command = "/usr/bin/lipc-set-prop com.lab126.winmgr orientationLock U";
     } else {
         command = "/usr/bin/lipc-set-prop com.lab126.winmgr orientationLock R";
     }
-    switch(fork()) {
+    D printf("Executing: /bin/sh -c %s\n", command);
+    switch (fork()) {
         case 0:
-        {
-            execlp("/bin/sh", "sh", "-c", command, NULL);
-        }
+            if (execl("/bin/sh", "sh", "-c", command, NULL) < 0) {
+                exit(1);
+            }
         case -1:
-            perror("Failed to run /usr/bin/lipc-set-prop com.lab126.winmgr\n");
-            exit(1);
+            D printf("Failed to fork\n");
+            break;
     }
 }
 
 static void screen_rotate(GtkWidget *widget, gpointer box) {
     UNUSED(widget);
-    const char *box_name;
-    D box_name  = gtk_widget_get_name(box);
-    D printf("box: %s\n", box_name);
+    UNUSED(box);
     // call lipc
     lipc_rotate();
 }
@@ -252,10 +254,11 @@ static void toggle_keyboard(GtkWidget *widget, gpointer box) {
     GtkWidget *keyboard_box = NULL;
     GList *box_list = gtk_container_get_children(GTK_CONTAINER(box));
     for (GList *cur = box_list; cur != NULL; cur = cur->next) {
-        const char *box_name = gtk_widget_get_name(GTK_WIDGET(cur->data));
+        const gchar *box_name = gtk_widget_get_name(GTK_WIDGET(cur->data));
         D printf("box: %s\n", box_name);
         if (!strncmp(box_name, "kbBox", 5)) { keyboard_box = GTK_WIDGET(cur->data); }
     }
+    g_list_free(box_list);
     if (keyboard_box) {
         if (conf->kb_on) {
             gtk_widget_hide(keyboard_box);
@@ -265,7 +268,6 @@ static void toggle_keyboard(GtkWidget *widget, gpointer box) {
             conf->kb_on = TRUE;
         }
     }
-    g_list_free(box_list);
 }
 
 static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointer box) {
@@ -273,12 +275,12 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
     D printf("event-button: %i\n", event->button);
 #ifdef KINDLE
     // ignore any motion events (i think we don't need selecting text as one finger motion scrolls buffer)
-    if (event->type == GDK_MOTION_NOTIFY) return TRUE;
+    if (event->type == GDK_MOTION_NOTIFY) { return TRUE; }
 #endif
     if (event->button == BUTTON_MENU) {
 #ifdef KINDLE
-        // ignore right button click to disable paste (quite messy on kindle)
-        if (event->type == GDK_BUTTON_PRESS) return TRUE;
+        // ignore button click to disable paste (quite messy on kindle)
+        if (event->type == GDK_BUTTON_PRESS) { return TRUE; }
 #endif
         // popup menu on button release
         GtkWidget *menu = gtk_menu_new();
@@ -315,8 +317,7 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
         
         gtk_widget_show_all(menu);
         
-        GdkEventButton *bevent = (GdkEventButton *) event;
-        gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, bevent->button, bevent->time);
+        gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, event->time);
         return TRUE;
     }
     return FALSE;
@@ -338,34 +339,55 @@ static void inject_gtkrc(void) {
 #endif
 
 static void version(void) {
-    printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n",
+    printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n\n",
            VERSION, VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION,
            GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
+#if VTE_CHECK_VERSION(0,40,0)
+    if (vte_get_major_version() != VTE_MAJOR_VERSION ||
+        vte_get_minor_version() != VTE_MINOR_VERSION ||
+        vte_get_micro_version() != VTE_MICRO_VERSION) {
+        printf("Warning, using different vte version than compiled with (%i.%i.%i)!\n",
+               vte_get_major_version(),
+               vte_get_minor_version(),
+               vte_get_micro_version());
+    }
+#endif
+#if GTK_CHECK_VERSION(3,0,0)
+    if (gtk_get_major_version() != GTK_MAJOR_VERSION ||
+        gtk_get_minor_version() != GTK_MINOR_VERSION ||
+        gtk_get_micro_version() != GTK_MICRO_VERSION) {
+        printf("Warning, using different gtk+ version than compiled with (%i.%i.%i)!\n",
+               gtk_get_major_version(),
+               gtk_get_minor_version(),
+               gtk_get_micro_version());
+    }
+#endif
     exit(0);
 }
 
 static void usage(void) {
     printf("Usage: kterm [OPTIONS]\n");
-    printf("        -c <0|1>     - color scheme (0 light, 1 dark)\n");
-    printf("        -d           - debug mode\n");
-    printf("        -e <command> - execute command in kterm\n");
-    printf("        -E <var>     - set environment variable\n");
-    printf("        -f <family>  - font family\n");
-    printf("        -h           - show this message\n");
-    printf("        -k <0|1>     - keyboard off/on\n");
-    printf("        -l <path>    - keyboard layout config path\n");
-    printf("        -s <size>    - font size\n");
-    printf("        -v           - print version and exit\n");
+    printf("        -c <0|1>     color scheme (0 light, 1 dark)\n");
+    printf("        -d           debug mode\n");
+    printf("        -e <command> execute command in kterm\n");
+    printf("        -E <var>     set environment variable\n");
+    printf("        -f <family>  font family\n");
+    printf("        -h           show this message\n");
+    printf("        -k <0|1>     keyboard off/on\n");
+    printf("        -l <path>    keyboard layout config path\n");
+    printf("        -s <size>    font size\n");
+    printf("        -v           print version and exit\n");
     exit(0);
 }
 
 static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv) {
     gboolean ret = TRUE;
+    GError *error = NULL;
     gchar *argv[TERM_ARGS_MAX] = { NULL };
     gint argc = 0;
     gchar *shell = NULL;
 #if VTE_CHECK_VERSION(0,25,1)
-    if (!command) {
+    if (!command || *command == '\0') {
         // prepend args with shell
         if ((shell = vte_get_user_shell()) == NULL) {
             shell = g_strdup("/bin/sh");
@@ -381,9 +403,9 @@ static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv
         }
     }
 
-    set_terminal_colors(terminal, conf->color_scheme);
+    set_terminal_colors(terminal, conf->color_reversed);
     vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), VTE_SCROLLBACK_LINES);
-    set_terminal_font(VTE_TERMINAL(terminal), conf->font_family, (int) conf->font_size);
+    set_terminal_font(VTE_TERMINAL(terminal), conf->font_family, (gint) conf->font_size);
 #if VTE_CHECK_VERSION(0,38,0)
     vte_terminal_set_encoding(VTE_TERMINAL(terminal), VTE_ENCODING, NULL);
 #else
@@ -392,17 +414,21 @@ static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv
     vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), TRUE);
     
 #if VTE_CHECK_VERSION(0,38,0)
-    ret = vte_terminal_spawn_sync(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, NULL);
+    ret = vte_terminal_spawn_sync(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &error);
 #elif VTE_CHECK_VERSION(0,25,1)
-    ret = vte_terminal_fork_command_full(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+    ret = vte_terminal_fork_command_full(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
 #else
     ret = vte_terminal_fork_command(VTE_TERMINAL(terminal), argv[0], (argv[0] ? argv : NULL), envv, NULL, FALSE, FALSE, FALSE);
 #endif
     if (shell) { g_free(shell); }
+    if (error) {
+        D printf("Failed to fork: %s\n", error->message);
+        g_error_free(error);
+    }
     return ret;
 }
 
-int main(int argc, char **argv) {
+gint main(gint argc, gchar **argv) {
     
     conf = parse_config(); // call first so args overide defaults/config
     
@@ -412,8 +438,12 @@ int main(int argc, char **argv) {
     gchar *envv[TERM_ARGS_MAX] = { NULL };
     gint envc = 0;
 #ifdef KINDLE
+    // modify buttons style
+    inject_gtkrc();
     // set short prompt
     envv[envc++] = "PS1=[\\W]\\$ ";
+    // set terminfo path
+    envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
     while((c = getopt(argc, argv, "c:de:E:f:hk:l:s:v")) != -1) {
         switch(c) {
@@ -430,11 +460,11 @@ int main(int argc, char **argv) {
                 break;
             case 'c':
                 i = atoi(optarg);
-                if ((i == 0) | (i == 1)) conf->color_scheme = (guint) i;
+                if ((i == TRUE) | (i == FALSE)) { conf->color_reversed = i; }
                 break;
             case 'k':
                 i = atoi(optarg);
-                if ((i == 0) | (i == 1)) conf->kb_on = (guint) i;
+                if ((i == TRUE) | (i == FALSE)) { conf->kb_on = i; }
                 break;
             case 'l':
                 snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", optarg);
@@ -455,9 +485,6 @@ int main(int argc, char **argv) {
         }
     }
 
-#ifdef KINDLE
-    inject_gtkrc();
-#endif
     gtk_init(&argc, &argv);
     
     install_signal_handlers();
@@ -503,7 +530,7 @@ int main(int argc, char **argv) {
     gtk_box_pack_start(GTK_BOX(vbox), terminal, TRUE, TRUE, 0);
     
     // signals
-    g_signal_connect(window, "delete_event", G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(window, "delete_event", G_CALLBACK(exit_on_signal), NULL);
     g_signal_connect(terminal, "child-exited", G_CALLBACK(terminal_exit), NULL);
     g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), vbox);
     g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), vbox);

@@ -23,27 +23,30 @@
 #include <gtk/gtk.h>
 
 #ifndef VERSION
-#define VERSION "2.0"
+# define VERSION "2.0"
 #endif
 #ifdef KINDLE
 // kindle title scheme
-#define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL" 
+# define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL"
 // middle button on kindle
-#define BUTTON_MENU 2
+# define BUTTON_MENU 2
+// terminfo path
+# define TERMINFO_PATH SYSCONFDIR "/vte/terminfo"
 #else
-#define TITLE "kterm " VERSION
-#define BUTTON_MENU 3
+# define TITLE "kterm " VERSION
+# define BUTTON_MENU 3
 #endif
 // keyboard config path
 #ifndef SYSCONFDIR
-#define SYSCONFDIR "/etc/local"
+# define SYSCONFDIR "/etc/local"
 #endif
-#define KB_FULL_PATH SYSCONFDIR "/kterm/layouts/keyboard.xml"
-// matchbox-keyboard takes 1/3 of the screen height
+#define KB_FULL_PATH SYSCONFDIR "/layouts/keyboard.xml"
+// keyboard takes 1/3 of the screen height
 #define KB_HEIGHT_FACTOR 3.05
 // config file
 #define CONFIG_FILE "kterm.conf"
 #define CONFIG_FULL_PATH SYSCONFDIR "/kterm/" CONFIG_FILE
+
 // resize font
 #define FONT_UP 0
 #define FONT_DOWN 1
@@ -51,15 +54,16 @@
 #define KB_BOX 0
 #define TERM_BOX 1
 
-#ifndef MAX 
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#ifndef MAX
+# define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef PATH_MAX
-#define PATH_MAX 4096
+# define PATH_MAX 4096
 #endif
 
 #define TERM_ARGS_MAX 50
+#define KB_RELEASE_DELAY_MS 100
 
 
 // terminal scrollback size
@@ -70,21 +74,21 @@
 // default encoding
 #define VTE_ENCODING "UTF-8"
 // terminal color schemes
-#define VTE_SCHEME_LIGHT 0
-#define VTE_SCHEME_DARK 1
+#define VTE_SCHEME_LIGHT FALSE
+#define VTE_SCHEME_DARK TRUE
 
-extern unsigned int debug;
+extern gboolean debug;
 #define D if(debug)
 
 #define UNUSED(x) (void)(x)
 
 // parse_config
 typedef struct {
-  guint kb_on;
-  guint color_scheme;
-  gchar font_family[50];
-  guint font_size;
-  gchar kb_conf_path[PATH_MAX];
+    gboolean kb_on;
+    gboolean color_reversed;
+    gchar font_family[50];
+    guint font_size;
+    gchar kb_conf_path[PATH_MAX];
 } KTconf;
 
 KTconf *parse_config();

@@ -48,16 +48,17 @@ static GdkDevice *getkbdevice(void) {
 #endif
 
 static KBtype kbstate_to_kbtype(guint32 modifiers) {
+    KBtype type = KBT_DEFAULT;
     if (modifiers & (GDK_LOCK_MASK | GDK_SHIFT_MASK)) {
-        return KBT_SHIFT;
+        type = KBT_SHIFT;
     } else if (modifiers & GDK_MOD2_MASK) {
-        return KBT_MOD1;
+        type = KBT_MOD1;
     } else if (modifiers & GDK_MOD3_MASK) {
-        return KBT_MOD2;
+        type = KBT_MOD2;
     } else if (modifiers & GDK_MOD4_MASK) {
-        return KBT_MOD3;
+        type = KBT_MOD3;
     }
-    return KBT_DEFAULT;
+    return type;
 }
 
 static gboolean modifier_only_caps(Keyboard *keyboard) {
@@ -80,9 +81,15 @@ static void keyboard_set_layout(Keyboard *keyboard) {
                 gtk_button_set_image(GTK_BUTTON(key->button), key->image[type]);
                 gtk_button_set_image_position(GTK_BUTTON(key->button), GTK_POS_BOTTOM);
             }
+            if (gtk_button_get_label(GTK_BUTTON(key->button))) {
+                gtk_button_set_label(GTK_BUTTON(key->button), NULL);
+            }
         } else if (key->label[type]) {
             if (key->label[type] != gtk_button_get_label(GTK_BUTTON(key->button))) {
                 gtk_button_set_label(GTK_BUTTON(key->button), key->label[type]);
+            }
+            if (gtk_button_get_image(GTK_BUTTON(key->button))) {
+                gtk_button_set_image(GTK_BUTTON(key->button), NULL);
             }
         }
     }
@@ -151,8 +158,8 @@ void keyboard_set_widths(Keyboard *keyboard) {
         gtk_widget_style_get(first, "inner-border", &border, NULL);
         if (border) {
             unit_min += (guint) (border->left + border->right);
+            gtk_border_free(border);
         }
-        gtk_border_free(border);
 #endif
     }
     guint unit = MAX(unit_max, unit_min);
@@ -164,8 +171,16 @@ void keyboard_set_widths(Keyboard *keyboard) {
             width /= KEY_UNIT;
         }
         if (key->extended && key->keyboard->is_portrait) {
-            gtk_widget_hide(key->button);
-        } else if (key->fill) {
+            if (gtk_widget_get_visible(key->button)) {
+                gtk_widget_hide(key->button);
+            }
+            continue;
+        } else if (key->extended) {
+            if (!gtk_widget_get_visible(key->button)) {
+                gtk_widget_show(key->button);
+            }
+        }
+        if (key->fill) {
             gtk_box_set_child_packing(GTK_BOX(gtk_widget_get_parent(key->button)), key->button, TRUE, TRUE, 0, GTK_PACK_START);
         } else {
             gtk_widget_set_size_request(key->button, (gint) width, -1);
@@ -245,8 +260,8 @@ gboolean keyboard_event_release(gpointer data) {
     D printf("release: %s\n", gdk_keyval_name(key->keyval[kb_type]));
     guint keyval = key->keyval[kb_type];
     if ((!keyval && kb_type == KBT_DEFAULT) || (keyval = key->keyval[KBT_DEFAULT]) == 0) {
-            D printf("Empty action\n");
-            return FALSE;
+        D printf("Empty action\n");
+        return FALSE;
     }
     
     if (keyboard->modifiers & KB_MODIFIERS_SET_MASK) {
@@ -285,10 +300,13 @@ void keyboard_terminal_feed(GtkWidget *button, Key *key) {
     box_list = gtk_container_get_children(GTK_CONTAINER(kterm_box));
     GtkWidget *terminal = NULL;
     for (GList *cur = box_list; cur != NULL; cur = cur->next) {
-        const char *box_name = gtk_widget_get_name(GTK_WIDGET(cur->data));
-        if (!strncmp(box_name, "termBox", 7)) { terminal = GTK_WIDGET(cur->data); }
+        const gchar *box_name = gtk_widget_get_name(GTK_WIDGET(cur->data));
+        if (!strcmp(box_name, "termBox")) { terminal = GTK_WIDGET(cur->data); }
     }
     g_list_free(box_list);
+    if G_UNLIKELY(!terminal) {
+        return;
+    }
 
     Keyboard *keyboard = key->keyboard;
     KBtype kb_type = kbstate_to_kbtype(keyboard->modifiers);
@@ -298,7 +316,7 @@ void keyboard_terminal_feed(GtkWidget *button, Key *key) {
     }
     gchar utf[6];
     gint utf_len = g_unichar_to_utf8(gdk_keyval_to_unicode(key->keyval[kb_type]), utf);
-    D printf("feed child\n");
+    D printf("feed child: %i chars\n", utf_len);
     vte_terminal_feed_child(VTE_TERMINAL(terminal), utf, utf_len);
 }
 
@@ -310,7 +328,7 @@ gboolean keyboard_event(GtkWidget *button, GdkEvent *ev, Key *key) {
         }
         return TRUE;
     } else if (ev->type == GDK_BUTTON_RELEASE && !key->modifier) {
-        g_timeout_add(100, keyboard_event_release, key);
+        g_timeout_add(KB_RELEASE_DELAY_MS, keyboard_event_release, key);
         return TRUE;
     }
     return FALSE;

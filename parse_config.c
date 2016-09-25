@@ -2,7 +2,7 @@
  *
  * This file is part of kterm
  *
- * Copyright(C) 2013 Bartek Fabiszewski (www.fabiszewski.net)
+ * Copyright(C) 2013-16 Bartek Fabiszewski (www.fabiszewski.net)
  *
  * This is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by
@@ -37,7 +37,7 @@ KTconf *parse_config() {
         snprintf(conf_path, sizeof(conf_path), "%s", CONFIG_FULL_PATH);
     } else {
         // set path to kterm binary's path
-        char self[PATH_MAX], *s;
+        gchar self[PATH_MAX], *s;
         if (readlink("/proc/self/exe", self, sizeof(self)-1) != -1) {
             if ((s = strrchr(self, '/')) != NULL) {
                 *s = '\0';
@@ -54,7 +54,7 @@ KTconf *parse_config() {
     
     // defaults
     conf->kb_on = 1;
-    conf->color_scheme = VTE_SCHEME_LIGHT;
+    conf->color_reversed = FALSE;
     conf->font_size = VTE_FONT_SIZE;
     snprintf(conf->font_family, sizeof(conf->font_family), "%s", VTE_FONT_FAMILY);
     snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", KB_FULL_PATH);
@@ -65,16 +65,16 @@ KTconf *parse_config() {
         return conf;
     }
     
-    char buf[PATH_MAX];
+    gchar buf[PATH_MAX];
     while (fgets(buf, sizeof(buf), fp)) {
         if (buf[0] == '#' || buf[0] == '\n') { continue; }
         if (!strncmp(buf, "keyboard", 8)) {
-            sscanf(buf, "keyboard = %u", &conf->kb_on);
-            D printf("kb_on = %u\n", conf->kb_on);
+            sscanf(buf, "keyboard = %i", &conf->kb_on);
+            D printf("kb_on = %i\n", conf->kb_on);
         }
         else if (!strncmp(buf, "color_scheme", 12)) {
-            sscanf(buf, "color_scheme = %u", &conf->color_scheme);
-            D printf("color_scheme = %u\n", conf->color_scheme);
+            sscanf(buf, "color_scheme = %i", &conf->color_reversed);
+            D printf("color_scheme = %i\n", conf->color_reversed);
         }
         else if (!strncmp(buf, "font_family", 11)) {
             gchar str[256];

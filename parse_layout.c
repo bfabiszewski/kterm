@@ -156,7 +156,7 @@ static gboolean parser_button_start(State *state, const gchar **attribute_names,
         return FALSE;
     }
     Key *key = g_malloc0(sizeof(Key));
-    for (int j = 0; attribute_names[j]; j++) {
+    for (gint j = 0; attribute_names[j]; j++) {
         if (!g_ascii_strcasecmp(attribute_names[j], "obey-caps") && !g_ascii_strcasecmp(attribute_values[j], "true")) {
             key->obey_caps = TRUE;
         }
@@ -193,7 +193,7 @@ static gboolean parser_button_end(State *state) {
 
 static gboolean parser_button_space(State *state, const gchar **attribute_names, const gchar **attribute_values) {
     Key *key = g_malloc0(sizeof(Key));
-    for (int j = 0; attribute_names[j]; j++) {
+    for (gint j = 0; attribute_names[j]; j++) {
         if (!g_ascii_strcasecmp(attribute_names[j], "fill") && !g_ascii_strcasecmp(attribute_values[j], "true")) {
             key->fill = TRUE;
         }
@@ -205,7 +205,7 @@ static gboolean parser_button_space(State *state, const gchar **attribute_names,
         }
     }
     key->keyboard = state->keyboard;
-    key->button = gtk_label_new("");
+    key->button = gtk_label_new(NULL);
     gtk_widget_set_can_focus(key->button, FALSE);
     state->current_key = key;
     parser_button_end(state);
@@ -213,22 +213,22 @@ static gboolean parser_button_space(State *state, const gchar **attribute_names,
 }
 
 static guint parser_button_label(Key *key, const gchar *attribute_value, KBtype kb_type) {
-    const char prefix[] = "image:";
-    const size_t prefix_len = sizeof(prefix) - 1;
+    const gchar prefix[] = "image:";
+    const guint prefix_len = sizeof(prefix) - 1;
     gint width = 0;
     if (!strncmp(attribute_value, prefix, prefix_len)) {
         GtkWidget *button_image = gtk_image_new();
-        char path[PATH_MAX];
+        gchar path[PATH_MAX];
         if (attribute_value[prefix_len] == '/') {
             // absolute path
             snprintf(path, sizeof(path), "%s", &attribute_value[prefix_len]);
         } else {
             // relative to config
             snprintf(path, sizeof(path), "%s", conf->kb_conf_path);
-            char *p = NULL;
+            gchar *p = NULL;
             if ((p = strrchr(path, '/')) != NULL) {
                 *++p = '\0';
-                size_t space_left = sizeof(path) - strlen(path);
+                guint space_left = sizeof(path) - (guint) strlen(path);
                 strncpy(p, &attribute_value[prefix_len], space_left);
             } else {
                 snprintf(path, sizeof(path), "%s", &attribute_value[prefix_len]);
@@ -284,8 +284,8 @@ static guint parser_button_special(const gchar *special) {
 }
 
 static void parser_button_action(Key *key, const gchar *attribute_value, KBtype kb_type) {
-    const char prefix[] = "modifier:";
-    const size_t prefix_len = sizeof(prefix) - 1;
+    const gchar prefix[] = "modifier:";
+    const guint prefix_len = sizeof(prefix) - 1;
     if (!strncmp(attribute_value, prefix, prefix_len)) {
         key->keyval[kb_type] = 0;
         key->modifier = parser_button_mod(&attribute_value[prefix_len]);
@@ -298,7 +298,7 @@ static void parser_button_action(Key *key, const gchar *attribute_value, KBtype 
     }
 }
 
-static gboolean parser_button_fill(State *state, const gchar **attribute_names, const gchar **attribute_values, KBtype kb_type) {
+static gboolean parser_button_contents(State *state, const gchar **attribute_names, const gchar **attribute_values, KBtype kb_type) {
     if (state->current_key == NULL) {
         D printf("Button empty\n");
         return FALSE;
@@ -336,7 +336,7 @@ static void parser_start_node_cb(GMarkupParseContext *context, const gchar *node
     UNUSED(context);
     gboolean ret = TRUE;
     State *state = user_data;
-    for (int i = 0; attribute_names[i]; i++) {
+    for (gint i = 0; attribute_names[i]; i++) {
         D printf ("attribute %s = \"%s\"\n", attribute_names[i], attribute_values[i]);
     }
     if (!strcmp(node_name, "row")) {
@@ -346,19 +346,19 @@ static void parser_start_node_cb(GMarkupParseContext *context, const gchar *node
         ret = parser_button_start(state, attribute_names, attribute_values);
     }
     else if (!strcmp(node_name, "default") || !strcmp(node_name, "normal")) {
-        ret = parser_button_fill(state, attribute_names, attribute_values, KBT_DEFAULT);
+        ret = parser_button_contents(state, attribute_names, attribute_values, KBT_DEFAULT);
     }
     else if (!strcmp(node_name, "shifted")) {
-        ret = parser_button_fill(state, attribute_names, attribute_values, KBT_SHIFT);
+        ret = parser_button_contents(state, attribute_names, attribute_values, KBT_SHIFT);
     }
     else if (!strcmp(node_name, "mod1")) {
-        ret = parser_button_fill(state, attribute_names, attribute_values, KBT_MOD1);
+        ret = parser_button_contents(state, attribute_names, attribute_values, KBT_MOD1);
     }
     else if (!strcmp(node_name, "mod2")) {
-        ret = parser_button_fill(state, attribute_names, attribute_values, KBT_MOD2);
+        ret = parser_button_contents(state, attribute_names, attribute_values, KBT_MOD2);
     }
     else if (!strcmp(node_name, "mod3")) {
-        ret = parser_button_fill(state, attribute_names, attribute_values, KBT_MOD3);
+        ret = parser_button_contents(state, attribute_names, attribute_values, KBT_MOD3);
     }
     else if (!strcmp(node_name, "space")) {
         ret = parser_button_space(state, attribute_names, attribute_values);
@@ -397,7 +397,7 @@ Keyboard * build_layout(GtkWidget *parent) {
     FILE *fp = NULL;
     if (getenv("MB_KBD_CONFIG")) {
         // override path with env variable
-        char kb_env_path[PATH_MAX];
+        gchar kb_env_path[PATH_MAX];
         snprintf(kb_env_path, sizeof(kb_env_path), "%s", getenv("MB_KBD_CONFIG"));
         fp = fopen(kb_env_path, "r");
     }
@@ -435,7 +435,6 @@ Keyboard * build_layout(GtkWidget *parent) {
     memset(&parser, 0, sizeof(GMarkupParser));
     parser.start_element = parser_start_node_cb;
     parser.end_element = parser_end_node_cb;
-    //parser.error = NULL;
     GMarkupParseContext *context = g_markup_parse_context_new(&parser, 0, &state, NULL);
     if G_UNLIKELY(!context) {
         D printf("g_markup_parse_context_new failed\n");
@@ -443,7 +442,7 @@ Keyboard * build_layout(GtkWidget *parent) {
         state_cleanup(&state, TRUE);
         return NULL;
     }
-    char buf[500];
+    gchar buf[500];
     while (fgets(buf, sizeof(buf), fp)) {
         g_markup_parse_context_parse(context, buf, (gssize) strlen(buf), &error);
         if (keyboard->key_count + KBT_COUNT >= KEYS_MAX) {
