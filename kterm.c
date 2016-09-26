@@ -380,9 +380,7 @@ static void usage(void) {
     exit(0);
 }
 
-static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv) {
-    gboolean ret = TRUE;
-    GError *error = NULL;
+static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GError **error) {
     gchar *argv[TERM_ARGS_MAX] = { NULL };
     gint argc = 0;
     gchar *shell = NULL;
@@ -414,18 +412,35 @@ static gboolean setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv
     vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), TRUE);
     
 #if VTE_CHECK_VERSION(0,38,0)
-    ret = vte_terminal_spawn_sync(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &error);
+    vte_terminal_spawn_sync(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, error);
 #elif VTE_CHECK_VERSION(0,25,1)
-    ret = vte_terminal_fork_command_full(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
+    vte_terminal_fork_command_full(VTE_TERMINAL(terminal), 0, NULL, argv, envv, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, error);
 #else
+    gboolean ret = TRUE;
     ret = vte_terminal_fork_command(VTE_TERMINAL(terminal), argv[0], (argv[0] ? argv : NULL), envv, NULL, FALSE, FALSE, FALSE);
+    if (!ret) {
+        g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "vte_terminal_fork_command returned error");
+    }
 #endif
     if (shell) { g_free(shell); }
-    if (error) {
-        D printf("Failed to fork: %s\n", error->message);
-        g_error_free(error);
+    if (*error) {
+        g_prefix_error(error, "VTE terminal fork failed.\n");
+        D printf("%s\n", (*error)->message);
     }
-    return ret;
+}
+
+void error_handle(GtkWidget *window, GError **error) {
+    GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), flags,
+                                               GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
+                                               "%s", (*error)->message);
+#ifdef KINDLE
+    gtk_window_set_title(GTK_WINDOW(dialog), TITLE_DIALOG);
+#endif
+    gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER_ALWAYS);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    g_clear_error(error);
 }
 
 gint main(gint argc, gchar **argv) {
@@ -485,6 +500,7 @@ gint main(gint argc, gchar **argv) {
         }
     }
 
+    GError *error = NULL;
     gtk_init(&argc, &argv);
     
     install_signal_handlers();
@@ -517,13 +533,20 @@ gint main(gint argc, gchar **argv) {
     
     gtk_widget_set_name(keyboard_box, "kbBox");
     set_box_size(keyboard_box, NULL, NULL);
-    Keyboard *keyboard = build_layout(keyboard_box);
+    Keyboard *keyboard = build_layout(keyboard_box, &error);
+    if G_UNLIKELY(error) {
+        error_handle(window, &error);
+        clean_on_exit(keyboard);
+        exit(1);
+    }
     gtk_box_pack_end(GTK_BOX(vbox), keyboard_box, FALSE, FALSE, 0);
     
     GtkWidget *terminal = vte_terminal_new();
-    if G_UNLIKELY(!setup_terminal(terminal, command, envv)) {
+    setup_terminal(terminal, command, envv, &error);
+    if G_UNLIKELY(error) {
+        error_handle(window, &error);
         clean_on_exit(keyboard);
-        exit(0);
+        exit(1);
     }
     gtk_widget_set_name(terminal, "termBox");
     gtk_widget_grab_focus(terminal);
@@ -537,11 +560,11 @@ gint main(gint argc, gchar **argv) {
     g_signal_connect(terminal, "motion-notify-event", G_CALLBACK(button_event), vbox);
     
     gtk_widget_show_all(window);
+    gtk_window_maximize(GTK_WINDOW(window));
+
     keyboard_set_widths(keyboard);
-    if G_UNLIKELY(!keyboard) {
-        gtk_widget_hide(keyboard_box);
-    }
-    
+    keyboard_set_size(keyboard_box, keyboard);
+
     g_signal_connect(window, "configure-event", G_CALLBACK(set_box_size), keyboard);
     
 #ifdef KINDLE

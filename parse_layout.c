@@ -364,7 +364,7 @@ static void parser_start_node_cb(GMarkupParseContext *context, const gchar *node
         ret = parser_button_space(state, attribute_names, attribute_values);
     }
     if (ret == FALSE) {
-        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "General keyboard parser error");
+        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "Not a valid kterm keyboard layout");
     }
 }
 
@@ -381,7 +381,7 @@ static void parser_end_node_cb(GMarkupParseContext *context, const gchar *node_n
         ret = parser_button_end(state);
     }
     if (ret == FALSE) {
-        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "General keyboard parser error");
+        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "Not a valid kterm keyboard layout");
     }
 }
 
@@ -393,7 +393,7 @@ void state_cleanup(State *state, gboolean with_container) {
     }
 }
 
-Keyboard * build_layout(GtkWidget *parent) {
+Keyboard * build_layout(GtkWidget *parent, GError **error) {
     FILE *fp = NULL;
     if (getenv("MB_KBD_CONFIG")) {
         // override path with env variable
@@ -430,7 +430,6 @@ Keyboard * build_layout(GtkWidget *parent) {
         keyboard->is_portrait = TRUE;
     }
     keyboard->row_width = (guint) screen_width;
-    GError *error = NULL;
     GMarkupParser parser;
     memset(&parser, 0, sizeof(GMarkupParser));
     parser.start_element = parser_start_node_cb;
@@ -444,16 +443,17 @@ Keyboard * build_layout(GtkWidget *parent) {
     }
     gchar buf[500];
     while (fgets(buf, sizeof(buf), fp)) {
-        g_markup_parse_context_parse(context, buf, (gssize) strlen(buf), &error);
+        g_markup_parse_context_parse(context, buf, (gssize) strlen(buf), error);
         if (keyboard->key_count + KBT_COUNT >= KEYS_MAX) {
-            g_set_error(&error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "Too many keys");
+            g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, "Too many keys (max %i)", KEYS_MAX);
         }
-        if G_UNLIKELY(error) { break; }
+        if G_UNLIKELY(*error) { break; }
     }
     g_markup_parse_context_free(context);
     D printf("Parsed %d keys in %d rows\n", keyboard->key_count, keyboard->row_count);
-    if G_UNLIKELY(error){
-        D printf("Parser error: %s\n", error->message);
+    if G_UNLIKELY(*error){
+        g_prefix_error(error, "Keyboard layout parser error.\n");
+        D printf("%s\n", (*error)->message);
         keyboard_free(&keyboard);
     } else {
         keyboard->keys = g_realloc(keyboard->keys, keyboard->key_count * sizeof(Key*));
