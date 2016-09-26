@@ -347,10 +347,10 @@ void keyboard_key_free(Key *key) {
 }
 
 void keyboard_keys_free(Key **keys) {
-    guint count = (*keys)->keyboard->key_count;
     if (keys == NULL) {
         return;
     }
+    guint count = (*keys && (*keys)->keyboard) ? (*keys)->keyboard->key_count : 0;
     for (guint i = 0; i < count; i++) {
         if (keys[i] == NULL) { break; }
         keyboard_key_free(keys[i]);
