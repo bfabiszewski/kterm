@@ -25,6 +25,10 @@
 #include <string.h>
 #include "config.h"
 
+/**
+ * Parse kterm config
+ * @return KTconf structure or NULL
+ */
 KTconf *parse_config(void) {
     
     D printf("Parsing config file\n");
@@ -48,7 +52,7 @@ KTconf *parse_config(void) {
     D printf("config: %s\n", conf_path);
     
     KTconf *conf = NULL;
-    if ((conf = g_malloc(sizeof(KTconf))) == NULL) {
+    if ((conf = g_malloc0(sizeof(KTconf))) == NULL) {
         D printf("Memory allocation failed\n");
         exit(1);
     }

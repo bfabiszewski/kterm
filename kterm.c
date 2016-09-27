@@ -34,13 +34,20 @@
 #include "keyboard.h"
 #include "config.h"
 
+/** Vte version check for early versions */
 #ifndef VTE_CHECK_VERSION
 #define VTE_CHECK_VERSION(x,y,z) FALSE
 #endif
 
+/** Global config */
 KTconf *conf;
+/** Global debug */
 gboolean debug = FALSE;
 
+/**
+ * Signals handler
+ * @param signo Signal number
+ */
 static void exit_on_signal(gint signo) {
     D printf("exiting on signal %i\n", signo);
     if (gtk_main_level()) {
@@ -50,6 +57,20 @@ static void exit_on_signal(gint signo) {
     }
 }
 
+/**
+ * Install signal handlers
+ */
+static void install_signal_handlers(void) {
+    signal(SIGCHLD, SIG_IGN); // kernel should handle zombies
+    signal(SIGINT, exit_on_signal);
+    signal(SIGQUIT, exit_on_signal);
+    signal(SIGTERM, exit_on_signal);
+}
+
+/**
+ * Free all resources
+ * @param keyboard Keyboard structure
+ */
 static void clean_on_exit(Keyboard *keyboard) {
     D printf("cleanup\n");
 #ifdef KINDLE
@@ -59,19 +80,21 @@ static void clean_on_exit(Keyboard *keyboard) {
     g_free(conf);
 }
 
+/**
+ * Terminal exit handler
+ */
 static void terminal_exit(void) {
     sleep(1); // time for kb to send key up event
     gtk_main_quit();
 }
 
-static void install_signal_handlers(void) {
-    signal(SIGCHLD, SIG_IGN); // kernel should handle zombies
-    signal(SIGINT, exit_on_signal);
-    signal(SIGQUIT, exit_on_signal);
-    signal(SIGTERM, exit_on_signal);
-}
-
-static void set_terminal_font(VteTerminal *terminal, const gchar *font_family, gint font_size) {
+/**
+ * Set terminal font
+ * @param terminal Terminal
+ * @param font_family Font family
+ * @param font_size Font size
+ */
+static void set_terminal_font(VteTerminal *terminal, const gchar *font_family, const gint font_size) {
     gchar font_name[200];
     snprintf(font_name, sizeof(font_name), "%s %i", font_family, font_size);
     D printf("font_name: %s\n", font_name);
@@ -80,7 +103,12 @@ static void set_terminal_font(VteTerminal *terminal, const gchar *font_family, g
     pango_font_description_free(desc);
 }
 
-static void resize_font(VteTerminal *terminal, guint mod) {
+/**
+ * Resize terminal font
+ * @param terminal Terminal
+ * @param mod FONT_UP or FONT_DOWN
+ */
+static void resize_font(VteTerminal *terminal, const guint mod) {
     const PangoFontDescription *pango_desc = vte_terminal_get_font(VTE_TERMINAL(terminal));
     gchar *pango_name = pango_font_description_to_string(pango_desc);
     if G_UNLIKELY(!pango_name) {
@@ -103,16 +131,30 @@ static void resize_font(VteTerminal *terminal, guint mod) {
     g_free(pango_name);
 }
 
+/**
+ * Increase font size menu callback
+ * @param widget Calling widget
+ * @param terminal Terminal
+ */
 static void fontup(GtkWidget *widget, gpointer terminal) {
     UNUSED(widget);
     resize_font(terminal, FONT_UP);
 }
 
+/**
+ * Decrease font size menu callback
+ * @param widget Calling widget
+ * @param terminal Terminal
+ */
 static void fontdown(GtkWidget *widget, gpointer terminal) {
     UNUSED(widget);
     resize_font(terminal, FONT_DOWN);
 }
-
+/**
+ * Setup terminal color scheme
+ * @param terminal Terminal
+ * @param scheme VTE_SCHEME_LIGHT or VTE_SCHEME_DARK
+ */
 static void set_terminal_colors(GtkWidget *terminal, gboolean scheme) {
 #if GTK_CHECK_VERSION(3,14,0)
     // light background
@@ -187,17 +229,29 @@ static void set_terminal_colors(GtkWidget *terminal, gboolean scheme) {
     conf->color_reversed = scheme;
 }
 
+/**
+ * Reverse color scheme menu callback
+ * @param widget Calling widget
+ * @param terminal Terminal
+ */
 static void reverse_colors(GtkWidget *widget, gpointer terminal) {
     UNUSED(widget);
     set_terminal_colors(terminal, !conf->color_reversed);
 }
 
-static gboolean keyboard_update(GtkWidget *box, GtkAllocation *alloc, Keyboard *keyboard) {
+/**
+ * Keyboard widget size allocation signal handler.
+ * Updates keyboard size
+ * @param keyboard_box Keyboard widget
+ * @param alloc Size allocation
+ * @param keyboard Keyboard structure
+ */
+static gboolean keyboard_update(GtkWidget *keyboard_box, GtkAllocation *alloc, Keyboard *keyboard) {
     static gint saved_width = -1;
     static gint saved_height = -1;
     if (conf->kb_on && alloc && (alloc->width != saved_width || alloc->height != saved_height)) {
         printf("set keyboard size: %ix%i\n", alloc->width, alloc->height);
-        keyboard_set_size(box, keyboard);
+        keyboard_set_size(keyboard_box, keyboard);
         saved_width = alloc->width;
         saved_height = alloc->height;
     }
@@ -205,6 +259,9 @@ static gboolean keyboard_update(GtkWidget *box, GtkAllocation *alloc, Keyboard *
 }
 
 #ifdef KINDLE
+/**
+ * Rotate Kindle screen
+ */
 static void lipc_rotate(void) {
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
@@ -227,6 +284,11 @@ static void lipc_rotate(void) {
     }
 }
 
+/**
+ * Rotate screen menu callback
+ * @param widget Calling widget
+ * @param box Kterm container
+ */
 static void screen_rotate(GtkWidget *widget, gpointer box) {
     UNUSED(widget);
     UNUSED(box);
@@ -235,11 +297,21 @@ static void screen_rotate(GtkWidget *widget, gpointer box) {
 }
 #endif
 
+/**
+ * Reset terminal manu callback
+ * @param widget Calling widget
+ * @param terminal Terminal
+ */
 static void reset_terminal(GtkWidget *widget, gpointer terminal) {
     UNUSED(widget);
     vte_terminal_reset(terminal, TRUE, TRUE);
 }
 
+/**
+ * Toggle keyboard menu callback
+ * @param widget Calling widget
+ * @param box Kterm container
+ */
 static void toggle_keyboard(GtkWidget *widget, gpointer box) {
     UNUSED(widget);
     GtkWidget *keyboard_box = NULL;
@@ -261,6 +333,12 @@ static void toggle_keyboard(GtkWidget *widget, gpointer box) {
     }
 }
 
+/**
+ * Mouse button event callback
+ * @param terminal Terminal widget
+ * @param event Button event
+ * @param box Kterm container
+ */
 static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointer box) {
     D printf("event-type: %i\n", event->type);
     D printf("event-button: %i\n", event->button);
@@ -315,6 +393,11 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
 }
 
 #ifdef KINDLE
+/**
+ * Inject custom styles.
+ * Reason: Kindle users have limited access to gtkrc customizations.
+ * This scheme may however be overriden by local gtkrc files.
+ */
 static void inject_gtkrc(void) {
     gtk_rc_parse_string
     ("gtk_color_scheme = \"white: #ffffff\ngray: #f0f0f0\""
@@ -329,6 +412,10 @@ static void inject_gtkrc(void) {
 }
 #endif
 
+/**
+ * Print version number.
+ * If possible check for consistent libraries usage.
+ */
 static void version(void) {
     printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n\n",
            VERSION, VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION,
@@ -355,7 +442,9 @@ static void version(void) {
 #endif
     exit(0);
 }
-
+/**
+ * Print usage info and exit
+ */
 static void usage(void) {
     printf("Usage: kterm [OPTIONS]\n");
     printf("        -c <0|1>     color scheme (0 light, 1 dark)\n");
@@ -371,6 +460,13 @@ static void usage(void) {
     exit(0);
 }
 
+/**
+ * Setup terminal
+ * @param terminal Terminal
+ * @param command Command passed to terminal, null if none
+ * @param envv Null terminated array of env variable=value pairs passed to terminal
+ * @param error Set on error, null otherwise
+ */
 static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GError **error) {
     gchar *argv[TERM_ARGS_MAX] = { NULL };
     gint argc = 0;
@@ -420,6 +516,11 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
     }
 }
 
+/**
+ * Display dialog with error message and clear error
+ * @param window Parent window
+ * @param error Error structure
+ */
 static void error_handle(GtkWidget *window, GError **error) {
     GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
     GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), flags,
@@ -434,6 +535,7 @@ static void error_handle(GtkWidget *window, GError **error) {
     g_clear_error(error);
 }
 
+/** main */
 gint main(gint argc, gchar **argv) {
     conf = parse_config(); // call first so args overide defaults/config
     

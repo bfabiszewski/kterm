@@ -22,79 +22,92 @@
 
 #include <gtk/gtk.h>
 
+/** Kterm version */
 #ifndef VERSION
 # define VERSION "2.0"
 #endif
 #ifdef KINDLE
-// kindle title scheme
+/** Kindle title scheme */
 # define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL"
 # define TITLE_DIALOG "L:D_N:application_ID:net.fabiszewski.kterm_O:URL"
+/** Mouse button to open popup menu */
 // middle button on kindle
 # define BUTTON_MENU 2
-// terminfo path
+/** Terminfo path */
 # define TERMINFO_PATH SYSCONFDIR "/vte/terminfo"
 #else
+/** Window title */
 # define TITLE "kterm " VERSION
+/** Mouse button to open popup menu */
 # define BUTTON_MENU 3
 #endif
-// keyboard config path
+/** Sysconf path */
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc/local"
 #endif
+/** Default keyboard config path */
 #define KB_FULL_PATH SYSCONFDIR "/layouts/keyboard.xml"
-// keyboard takes at most 1/3 of the screen height
+/** Keyboard max factor. Keyboard takes at most 1/3 of the screen height */
 #define KB_HEIGHTMAX_FACTOR 3
+/** mm to inch conversion multiplier */
 #define MM_TO_IN 0.0393701
-// preferred key height in inches
+/** Preferred key button height in inches */
 #define KB_KEYHEIGHT_PREF (double) (8 * MM_TO_IN)
-// config file
+/** Config file name */
 #define CONFIG_FILE "kterm.conf"
+/** Default config file path */
 #define CONFIG_FULL_PATH SYSCONFDIR "/kterm/" CONFIG_FILE
 
-// resize font
+/** Resize font up */
 #define FONT_UP 0
+/** Resize font down */
 #define FONT_DOWN 1
-// boxes
-#define KB_BOX 0
-#define TERM_BOX 1
 
 #ifndef MAX
+/** MAX macro */
 # define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef PATH_MAX
+/** Path max */
 # define PATH_MAX 4096
 #endif
 
+/** Max count of arguments passed to terminal */
 #define TERM_ARGS_MAX 50
+
+/** Delay for key release event */
 #define KB_RELEASE_DELAY_MS 100
 
-
-// terminal scrollback size
+/** Terminal scrollback size */
 #define VTE_SCROLLBACK_LINES 200
-// default font
+/** Default terminal font family */
 #define VTE_FONT_FAMILY "monospace"
+/** Default terminal font size */
 #define VTE_FONT_SIZE 8
-// default encoding
+/** Default terminal encoding */
 #define VTE_ENCODING "UTF-8"
-// terminal color schemes
+/** Terminal color scheme normal */
 #define VTE_SCHEME_LIGHT FALSE
+/** Terminal color scheme reversed */
 #define VTE_SCHEME_DARK TRUE
 
+/** Debug */
 extern gboolean debug;
 #define D if(debug)
 
+/** Unused variable */
 #define UNUSED(x) (void)(x)
 
-// parse_config
+/** Kterm config */
 typedef struct {
-    gboolean kb_on;
-    gboolean color_reversed;
-    gchar font_family[50];
-    guint font_size;
-    gchar kb_conf_path[PATH_MAX];
+    gboolean kb_on; /** Keyboard visibility */
+    gboolean color_reversed; /** Color scheme, is reversed */
+    gchar font_family[50]; /** Terminal font family */
+    guint font_size;  /** Terminal font size */
+    gchar kb_conf_path[PATH_MAX];  /** Keyboard config path */
 } KTconf;
 
-KTconf *parse_config();
+KTconf * parse_config(void);
 
 #endif

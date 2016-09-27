@@ -24,15 +24,20 @@
 #include "keyboard.h"
 #include "config.h"
 
+/** Global config */
 extern KTconf *conf;
 
+/** Parser state */
 typedef struct {
-    Keyboard *keyboard;
-    GtkWidget *container;
-    GtkWidget *current_row;
-    Key *current_key;
+    Keyboard *keyboard; /** Keyboard structure to be filled */
+    GtkWidget *container; /** Container widget for keyboard */
+    GtkWidget *current_row; /** Currently parsed row */
+    Key *current_key; /** Currently parsed key */
 } State;
 
+/**
+ * Lookup table name to keyval
+ */
 static struct kbsymlookup kbspecial[] = {
 #if GTK_CHECK_VERSION(3,0,0)
     { GDK_KEY_BackSpace, "backspace" },
@@ -107,8 +112,12 @@ static struct kbsymlookup kbspecial[] = {
 #endif
 };
 
+/** Max size of kbspecial array */
 #define KBSYM_SIZE sizeof(kbspecial)/sizeof(kbspecial[0])
 
+/**
+ * Lookup table name to gdk modifier type
+ */
 static struct kbmodlookup kbmod[] = {
     { GDK_SHIFT_MASK, "shift" },
     { GDK_LOCK_MASK, "caps" },
@@ -120,8 +129,14 @@ static struct kbmodlookup kbmod[] = {
     { GDK_MOD5_MASK, "shift" }
 };
 
+/** Max size of kbmod array */
 #define KBMOD_SIZE sizeof(kbmod)/sizeof(kbmod[0])
 
+/** 
+ * Start parsing row node
+ * @param state Parser state structure
+ * @return True on success, false otherwise
+ */
 static gboolean parser_row_start(State *state) {
     if (state->keyboard->row_count >= ROWS_MAX) {
         D printf("Too many rows\n");
@@ -140,6 +155,11 @@ static gboolean parser_row_start(State *state) {
     return TRUE;
 }
 
+/**
+ * End parsing row node
+ * @param state Parser state structure
+ * @return True on success, false otherwise
+ */
 static gboolean parser_row_end(State *state) {
     if (state->current_row == NULL) {
         D printf("Row empty\n");
@@ -150,6 +170,13 @@ static gboolean parser_row_end(State *state) {
     return TRUE;
 }
 
+/**
+ * Parse key node
+ * @param state Parser state structure
+ * @param attribute_names Attribute names array
+ * @param attribute_values Attribute values array
+ * @return True on success, false otherwise
+ */
 static gboolean parser_button_start(State *state, const gchar **attribute_names, const gchar **attribute_values) {
     if (state->current_key) {
         D printf("Key not empty\n");
@@ -182,6 +209,11 @@ static gboolean parser_button_start(State *state, const gchar **attribute_names,
     return TRUE;
 }
 
+/**
+ * End parsing key node
+ * @param state Parser state structure
+ * @return True on success, false otherwise
+ */
 static gboolean parser_button_end(State *state) {
     if (state->current_key == NULL) {
         D printf("Button empty\n");
@@ -195,6 +227,13 @@ static gboolean parser_button_end(State *state) {
     return TRUE;
 }
 
+/**
+ * Parse space node
+ * @param state Parser state structure
+ * @param attribute_names Attribute names array
+ * @param attribute_values Attribute values array
+ * @return True on success, false otherwise
+ */
 static gboolean parser_button_space(State *state, const gchar **attribute_names, const gchar **attribute_values) {
     Key *key = g_malloc0(sizeof(Key));
     if (!key) {
@@ -220,7 +259,15 @@ static gboolean parser_button_space(State *state, const gchar **attribute_names,
     return TRUE;
 }
 
-static void parser_button_label(Key *key, const gchar *attribute_value, KBtype kb_type, gint *width, gint *height) {
+/**
+ * Set key button label/image
+ * @param key Key structure
+ * @param attribute_value Display attribute value
+ * @param kb_type Layout variant
+ * @param width Will be set to minium width of the button
+ * @param height Will be set to minium height of the button
+ */
+static void parser_button_label(Key *key, const gchar *attribute_value, const KBtype kb_type, gint *width, gint *height) {
     const gchar prefix[] = "image:";
     const guint prefix_len = sizeof(prefix) - 1;
     *width = 0;
@@ -273,7 +320,12 @@ static void parser_button_label(Key *key, const gchar *attribute_value, KBtype k
     }
 }
 
-static GdkModifierType parser_button_mod(const gchar *mod_str) {
+/**
+ * Get gdk modifier type for name string
+ * @param mod_str Modifier name
+ * @return Gdk modifier type or zero
+ */
+static GdkModifierType parser_get_modtype(const gchar *mod_str) {
     for (guint i = 0; i < KBMOD_SIZE; i++) {
         if (!g_ascii_strcasecmp(mod_str, kbmod[i].name)) {
             return kbmod[i].modifier;
@@ -282,7 +334,12 @@ static GdkModifierType parser_button_mod(const gchar *mod_str) {
     return 0;
 }
 
-static guint parser_button_special(const gchar *special) {
+/**
+ * Get keyval for name string
+ * @param special Special button name
+ * @return Keyval
+ */
+static guint parser_get_keyval(const gchar *special) {
     for (guint i = 0; i < KBSYM_SIZE; i++) {
         if (!g_ascii_strcasecmp(special, kbspecial[i].name)) {
             return kbspecial[i].keyval;
@@ -291,21 +348,35 @@ static guint parser_button_special(const gchar *special) {
     return 0;
 }
 
-static void parser_button_action(Key *key, const gchar *attribute_value, KBtype kb_type) {
+/**
+ * Set key button action
+ * @param key Key structure
+ * @param attribute_value Action attribute value
+ * @param kb_type Layout variant
+ */
+static void parser_button_action(Key *key, const gchar *attribute_value, const KBtype kb_type) {
     const gchar prefix[] = "modifier:";
     const guint prefix_len = sizeof(prefix) - 1;
     if (!strncmp(attribute_value, prefix, prefix_len)) {
         key->keyval[kb_type] = 0;
-        key->modifier = parser_button_mod(&attribute_value[prefix_len]);
+        key->modifier = parser_get_modtype(&attribute_value[prefix_len]);
     } else {
         if (g_utf8_strlen(attribute_value, -1) == 1) {
             key->keyval[kb_type] = gdk_unicode_to_keyval(g_utf8_get_char(attribute_value));
         } else {
-            key->keyval[kb_type] = parser_button_special(attribute_value);
+            key->keyval[kb_type] = parser_get_keyval(attribute_value);
         }
     }
 }
 
+/**
+ * Parse key node attributes
+ * @param state Parser state structure
+ * @param attribute_names Attribute names array
+ * @param attribute_values Attribute values array
+ * @param kb_type Keyboard layout variant
+ * @return True on success, false otherwise
+ */
 static gboolean parser_button_contents(State *state, const gchar **attribute_names, const gchar **attribute_values, KBtype kb_type) {
     if (state->current_key == NULL) {
         D printf("Button empty\n");
@@ -343,6 +414,15 @@ static gboolean parser_button_contents(State *state, const gchar **attribute_nam
     return TRUE;
 }
 
+/**
+ * Parser start node callback
+ * @param context Parser internal context
+ * @param node_name Node name
+ * @param attribute_names Attribute names array
+ * @param attribute_values Attribute values array
+ * @param user_data Contains state structure
+ * @param error Set on error, null if success
+ */
 static void parser_start_node_cb(GMarkupParseContext *context, const gchar *node_name,
                                  const gchar **attribute_names, const gchar **attribute_values,
                                  gpointer user_data, GError **error) {
@@ -381,6 +461,13 @@ static void parser_start_node_cb(GMarkupParseContext *context, const gchar *node
     }
 }
 
+/**
+ * Parser end node callback
+ * @param context Parser internal context
+ * @param node_name Node name
+ * @param user_data Contains state structure
+ * @param error Set on error, null if success
+ */
 static void parser_end_node_cb(GMarkupParseContext *context, const gchar *node_name,
                                gpointer user_data, GError **error) {
     UNUSED(context);
@@ -398,6 +485,11 @@ static void parser_end_node_cb(GMarkupParseContext *context, const gchar *node_n
     }
 }
 
+/**
+ * Recursively free state structure
+ * @param state Parser state
+ * @param with_container Destroy container if true
+ */
 static void state_cleanup(State *state, gboolean with_container) {
     if (state) {
         if (with_container && state->container) { gtk_widget_destroy(state->container); }
@@ -406,6 +498,12 @@ static void state_cleanup(State *state, gboolean with_container) {
     }
 }
 
+/**
+ * Parse keyboard config and build initial layout
+ * @param parent Parent widget for keyboard widget
+ * @param error Set on error, null if success
+ * @return Keyboard structure, null on failure
+ */
 Keyboard * build_layout(GtkWidget *parent, GError **error) {
     FILE *fp = NULL;
     if (getenv("MB_KBD_CONFIG")) {
@@ -445,13 +543,6 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
 #else
     state.container = gtk_vbox_new(TRUE, 0);
 #endif
-    GdkScreen *screen = gdk_screen_get_default();
-    gint screen_height = gdk_screen_get_height(screen);
-    gint screen_width = gdk_screen_get_width(screen);
-    if (screen_height > screen_width) {
-        keyboard->is_portrait = TRUE;
-    }
-    keyboard->row_width = (guint) screen_width;
     GMarkupParser parser;
     memset(&parser, 0, sizeof(GMarkupParser));
     parser.start_element = parser_start_node_cb;

@@ -24,7 +24,9 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
-
+/**
+ * Keyboard layout variants
+ */
 typedef enum {
     KBT_DEFAULT = 0,
     KBT_SHIFT,
@@ -34,48 +36,63 @@ typedef enum {
     KBT_COUNT
 } KBtype;
 
+/**
+ * Lookup table name to keyval
+ */
 struct kbsymlookup {
-    guint keyval;
-    gchar *name;
+    const guint keyval;
+    const gchar *name;
 };
 
+/**
+ * Lookup table name to gdk modifier type
+ */
 struct kbmodlookup {
-    GdkModifierType modifier;
-    gchar *name;
+    const GdkModifierType modifier;
+    const gchar *name;
 };
 
+/** Mask of all kterm supported modifiers set */
 #define KB_MODIFIERS_SET_MASK (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD2_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK)
+/** Mask of basic kterm supported modifiers set (shift, control, alt) */
 #define KB_MODIFIERS_BASIC_MASK (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)
 
+/** Max count of key buttons */
 #define KEYS_MAX 500
+/** Max count of keyboard rows */
 #define ROWS_MAX 10
+/** Basic size of key button in internal units */
 #define KEY_UNIT 1000
 
 struct Keyboard;
 
+/**
+ * Single keyboard key structure
+ */
 typedef struct Key {
-    GtkWidget *button;
-    gchar *label[KBT_COUNT];
-    GtkWidget *image[KBT_COUNT];
-    guint keyval[KBT_COUNT];
-    GdkModifierType modifier;
-    guint width;
-    gboolean obey_caps;
-    gboolean fill;
-    gboolean extended;
-    struct Keyboard *keyboard;
+    GtkWidget *button; /** Button widget */
+    gchar *label[KBT_COUNT]; /** Labels array for each layout variant */
+    GtkWidget *image[KBT_COUNT]; /** Image widgets array for each layout variant */
+    guint keyval[KBT_COUNT]; /** Keyvals array for each layout variant */
+    GdkModifierType modifier; /** Modifier type for modifier button */
+    guint width; /** Forced button width */
+    gboolean obey_caps; /** Button should react to caps lock */
+    gboolean fill; /** Button may expand to fill free space */
+    gboolean extended; /** Button only present in landscape view */
+    struct Keyboard *keyboard; /** Pointer to keyboard structure */
 } Key;
 
+/**
+ * Keyboard structure
+ */
 typedef struct Keyboard {
-    Key **keys;
-    guint32 modifier_mask;
-    guint key_count;
-    guint row_count;
-    guint key_per_row[ROWS_MAX];
-    guint unit_width;
-    guint unit_height;
-    gboolean is_portrait;
-    guint row_width;
+    Key **keys; /** Array of keys */
+    guint32 modifier_mask; /** Current state of modifiers */
+    guint key_count; /** Keys count */
+    guint row_count; /** Rows count */
+    guint key_per_row[ROWS_MAX]; /** Keys count in each row */
+    guint unit_width; /** Precalculated minimum width of a button */
+    guint unit_height; /** Precalculated minimum height of a button */
 } Keyboard;
 
 
