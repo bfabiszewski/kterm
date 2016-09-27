@@ -4,7 +4,7 @@ compiler:
   - clang
   - gcc
 
-env
+env:
   - GTK_VERSION=3
   - GTK_VERSION=2
 
