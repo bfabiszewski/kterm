@@ -156,6 +156,10 @@ static gboolean parser_button_start(State *state, const gchar **attribute_names,
         return FALSE;
     }
     Key *key = g_malloc0(sizeof(Key));
+    if (!key) {
+        D printf("Memory allocation failed\n");
+        return FALSE;
+    }
     for (gint j = 0; attribute_names[j]; j++) {
         if (!g_ascii_strcasecmp(attribute_names[j], "obey-caps") && !g_ascii_strcasecmp(attribute_values[j], "true")) {
             key->obey_caps = TRUE;
@@ -193,6 +197,10 @@ static gboolean parser_button_end(State *state) {
 
 static gboolean parser_button_space(State *state, const gchar **attribute_names, const gchar **attribute_values) {
     Key *key = g_malloc0(sizeof(Key));
+    if (!key) {
+        D printf("Memory allocation failed\n");
+        return FALSE;
+    }
     for (gint j = 0; attribute_names[j]; j++) {
         if (!g_ascii_strcasecmp(attribute_names[j], "fill") && !g_ascii_strcasecmp(attribute_values[j], "true")) {
             key->fill = TRUE;
@@ -212,10 +220,11 @@ static gboolean parser_button_space(State *state, const gchar **attribute_names,
     return TRUE;
 }
 
-static guint parser_button_label(Key *key, const gchar *attribute_value, KBtype kb_type) {
+static void parser_button_label(Key *key, const gchar *attribute_value, KBtype kb_type, gint *width, gint *height) {
     const gchar prefix[] = "image:";
     const guint prefix_len = sizeof(prefix) - 1;
-    gint width = 0;
+    *width = 0;
+    *height = 0;
     if (!strncmp(attribute_value, prefix, prefix_len)) {
         GtkWidget *button_image = gtk_image_new();
         gchar path[PATH_MAX];
@@ -246,7 +255,8 @@ static guint parser_button_label(Key *key, const gchar *attribute_value, KBtype 
         if (!key->width) {
             const GdkPixbuf *pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(button_image));
             if (pixbuf) {
-                width = gdk_pixbuf_get_width(pixbuf);
+                *width = gdk_pixbuf_get_width(pixbuf);
+                *height = gdk_pixbuf_get_height(pixbuf);
             }
         }
     } else {
@@ -257,12 +267,10 @@ static guint parser_button_label(Key *key, const gchar *attribute_value, KBtype 
         }
         if (!key->width && g_utf8_strlen(key->label[kb_type], -1) == 1) {
             PangoLayout *layout = gtk_widget_create_pango_layout(key->button, key->label[kb_type]);
-            pango_layout_get_pixel_size(layout, &width, NULL);
+            pango_layout_get_pixel_size(layout, width, height);
             g_object_unref(layout);
         }
     }
-
-    return (guint) width;
 }
 
 static GdkModifierType parser_button_mod(const gchar *mod_str) {
@@ -307,10 +315,15 @@ static gboolean parser_button_contents(State *state, const gchar **attribute_nam
     const gchar *action = NULL;
     for (gint j = 0; attribute_names[j]; j++) {
         if (!g_ascii_strcasecmp(attribute_names[j], "display")) {
-            guint width = parser_button_label(key, attribute_values[j], kb_type);
+            gint width = 0;
+            gint height = 0;
+            parser_button_label(key, attribute_values[j], kb_type, &width, &height);
             D printf("key width: %i\n", width);
-            if (width > state->keyboard->unit_width) {
-                state->keyboard->unit_width = width;
+            if ((guint) width > state->keyboard->unit_width) {
+                state->keyboard->unit_width = (guint) width;
+            }
+            if ((guint) height > state->keyboard->unit_height) {
+                state->keyboard->unit_height = (guint) height;
             }
         }
         else if (!g_ascii_strcasecmp(attribute_names[j], "action")) {
@@ -385,7 +398,7 @@ static void parser_end_node_cb(GMarkupParseContext *context, const gchar *node_n
     }
 }
 
-void state_cleanup(State *state, gboolean with_container) {
+static void state_cleanup(State *state, gboolean with_container) {
     if (state) {
         if (with_container && state->container) { gtk_widget_destroy(state->container); }
         if (state->current_row) { gtk_widget_destroy(state->current_row); }
@@ -414,8 +427,17 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
     State state;
     memset(&state, 0, sizeof(State));
     Keyboard *keyboard = g_malloc0(sizeof(Keyboard));
+    if (!keyboard) {
+        D printf("Memory allocation failed\n");
+        return NULL;
+    }
     state.keyboard = keyboard;
     Key **keys = g_malloc0(KEYS_MAX * sizeof(Key*));
+    if (!keys) {
+        D printf("Memory allocation failed\n");
+        g_free(keyboard);
+        return NULL;
+    }
     keyboard->keys = keys;
 #if GTK_CHECK_VERSION(3,0,0)
     state.container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);

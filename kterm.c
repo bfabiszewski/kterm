@@ -192,29 +192,20 @@ static void reverse_colors(GtkWidget *widget, gpointer terminal) {
     set_terminal_colors(terminal, !conf->color_reversed);
 }
 
-static gboolean set_box_size(GtkWidget *box, GdkEvent *event, void *data) {
-    UNUSED(box);
-    GdkScreen *screen = gdk_screen_get_default();
-    gint screen_height = gdk_screen_get_height(screen);
-    gint screen_width = gdk_screen_get_width(screen);
-    gint box_height = (event) ? ((GdkEventConfigure *) event)->height : 0;
-    gint box_width = (event) ? ((GdkEventConfigure *) event)->width : 0;
-    gint kb_height = (conf->kb_on) ? (gint) (screen_height/KB_HEIGHT_FACTOR) : 0;
-    D printf("box size: %ix%i\n", box_width, box_height);
+static gboolean keyboard_update(GtkWidget *box, GtkAllocation *alloc, Keyboard *keyboard) {
     static gint saved_width = -1;
-    if (box_width != saved_width) {
-        gtk_widget_set_size_request(box, screen_width, kb_height);
-        Keyboard *keyboard = data;
-        if (keyboard) {
-            keyboard_set_widths(keyboard);
-        }
-        saved_width = box_width;
+    static gint saved_height = -1;
+    if (conf->kb_on && alloc && (alloc->width != saved_width || alloc->height != saved_height)) {
+        printf("set keyboard size: %ix%i\n", alloc->width, alloc->height);
+        keyboard_set_size(box, keyboard);
+        saved_width = alloc->width;
+        saved_height = alloc->height;
     }
     return FALSE;
 }
 
 #ifdef KINDLE
-static void lipc_rotate() {
+static void lipc_rotate(void) {
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
     gint screen_width = gdk_screen_get_width(screen);
@@ -429,7 +420,7 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
     }
 }
 
-void error_handle(GtkWidget *window, GError **error) {
+static void error_handle(GtkWidget *window, GError **error) {
     GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
     GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window), flags,
                                                GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
@@ -444,7 +435,6 @@ void error_handle(GtkWidget *window, GError **error) {
 }
 
 gint main(gint argc, gchar **argv) {
-    
     conf = parse_config(); // call first so args overide defaults/config
     
     gint c = -1;
@@ -511,7 +501,6 @@ gint main(gint argc, gchar **argv) {
     //
     // main window
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_maximize(GTK_WINDOW(window));
     gtk_window_set_title(GTK_WINDOW(window), TITLE);
 #ifdef KINDLE
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
@@ -530,9 +519,8 @@ gint main(gint argc, gchar **argv) {
 #else
     GtkWidget *keyboard_box = gtk_vbox_new(FALSE, 0);
 #endif
-    
     gtk_widget_set_name(keyboard_box, "kbBox");
-    set_box_size(keyboard_box, NULL, NULL);
+    
     Keyboard *keyboard = build_layout(keyboard_box, &error);
     if G_UNLIKELY(error) {
         error_handle(window, &error);
@@ -562,10 +550,8 @@ gint main(gint argc, gchar **argv) {
     gtk_widget_show_all(window);
     gtk_window_maximize(GTK_WINDOW(window));
 
-    keyboard_set_widths(keyboard);
     keyboard_set_size(keyboard_box, keyboard);
-
-    g_signal_connect(window, "configure-event", G_CALLBACK(set_box_size), keyboard);
+    g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
     
 #ifdef KINDLE
     // grab keyboard

@@ -28,6 +28,7 @@
 #ifdef KINDLE
 // kindle title scheme
 # define TITLE "L:A_N:application_ID:net.fabiszewski.kterm_PC:N_O:URL"
+# define TITLE_DIALOG "L:D_N:application_ID:net.fabiszewski.kterm_O:URL"
 // middle button on kindle
 # define BUTTON_MENU 2
 // terminfo path
@@ -41,8 +42,11 @@
 # define SYSCONFDIR "/etc/local"
 #endif
 #define KB_FULL_PATH SYSCONFDIR "/layouts/keyboard.xml"
-// keyboard takes 1/3 of the screen height
-#define KB_HEIGHT_FACTOR 3.05
+// keyboard takes at most 1/3 of the screen height
+#define KB_HEIGHTMAX_FACTOR 3
+#define MM_TO_IN 0.0393701
+// preferred key height in inches
+#define KB_KEYHEIGHT_PREF (double) (8 * MM_TO_IN)
 // config file
 #define CONFIG_FILE "kterm.conf"
 #define CONFIG_FULL_PATH SYSCONFDIR "/kterm/" CONFIG_FILE

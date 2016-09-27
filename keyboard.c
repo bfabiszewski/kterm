@@ -47,26 +47,26 @@ static GdkDevice *getkbdevice(void) {
 }
 #endif
 
-static KBtype kbstate_to_kbtype(guint32 modifiers) {
+static KBtype kbstate_to_kbtype(guint32 modifier_mask) {
     KBtype type = KBT_DEFAULT;
-    if (modifiers & (GDK_LOCK_MASK | GDK_SHIFT_MASK)) {
+    if (modifier_mask & (GDK_LOCK_MASK | GDK_SHIFT_MASK)) {
         type = KBT_SHIFT;
-    } else if (modifiers & GDK_MOD2_MASK) {
+    } else if (modifier_mask & GDK_MOD2_MASK) {
         type = KBT_MOD1;
-    } else if (modifiers & GDK_MOD3_MASK) {
+    } else if (modifier_mask & GDK_MOD3_MASK) {
         type = KBT_MOD2;
-    } else if (modifiers & GDK_MOD4_MASK) {
+    } else if (modifier_mask & GDK_MOD4_MASK) {
         type = KBT_MOD3;
     }
     return type;
 }
 
 static gboolean modifier_only_caps(Keyboard *keyboard) {
-    return (keyboard->modifiers & GDK_LOCK_MASK) && !(keyboard->modifiers & GDK_SHIFT_MASK);
+    return (keyboard->modifier_mask & GDK_LOCK_MASK) && !(keyboard->modifier_mask & GDK_SHIFT_MASK);
 }
 
 static void keyboard_set_layout(Keyboard *keyboard) {
-    KBtype kb_type = kbstate_to_kbtype(keyboard->modifiers);
+    KBtype kb_type = kbstate_to_kbtype(keyboard->modifier_mask);
     gboolean only_caps = modifier_only_caps(keyboard);
     D printf("setting layout %d, caps: %i\n", kb_type, only_caps);
     for (guint i = 0; i < keyboard->key_count; i++) {
@@ -96,17 +96,17 @@ static void keyboard_set_layout(Keyboard *keyboard) {
 }
 
 static void keyboard_reset_modifiers(Keyboard *keyboard) {
-    D printf("resetting modifiers\n");
+    D printf("resetting modifier_mask\n");
     for (guint i = 0; i < keyboard->key_count; i++) {
         Key *key = keyboard->keys[i];
         if (key->modifier && key->modifier != GDK_LOCK_MASK) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(key->button), FALSE);
         }
     }
-    keyboard->modifiers &= GDK_LOCK_MASK;
+    keyboard->modifier_mask &= GDK_LOCK_MASK;
 }
 
-void keyboard_set_widths(Keyboard *keyboard) {
+void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
     if G_UNLIKELY(keyboard == NULL) {
         return;
     }
@@ -114,7 +114,6 @@ void keyboard_set_widths(Keyboard *keyboard) {
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
     gint screen_width = gdk_screen_get_width(screen);
-    D printf("setting widths: %ix%i\n", screen_width, screen_height);
     if (screen_width < screen_height) {
         keyboard->is_portrait = TRUE;
     }
@@ -139,33 +138,36 @@ void keyboard_set_widths(Keyboard *keyboard) {
         units = (units + (KEY_UNIT - 1)) / KEY_UNIT;
         units_row_max = MAX(units_row_max, units);
     }
-    guint unit_max = (units_row_max) ? (keyboard->row_width / units_row_max) : 0;
-    guint unit_min = keyboard->unit_width;
-    if (unit_min) {
-        // add padding and border
-        GtkWidget *first = keyboard->keys[0]->button;
+    guint unit_hmin = keyboard->unit_height;
+    guint unit_wmax = (units_row_max) ? (keyboard->row_width / units_row_max) : 0;
+    guint unit_wmin = keyboard->unit_width;
+    // add padding and border
+    GtkWidget *first = keyboard->keys[0]->button;
 #if GTK_CHECK_VERSION(3,0,0)
-        GtkStyleContext *style = gtk_widget_get_style_context(first);
-        GtkBorder extra = {0, 0, 0, 0};
-        gtk_style_context_get_padding(style, 0, &extra);
-        unit_min += (guint) (extra.left + extra.right);
-        gtk_style_context_get_border(style, 0, &extra);
-        unit_min += (guint) (extra.left + extra.right);
+    GtkStyleContext *style = gtk_widget_get_style_context(first);
+    GtkBorder extra = {0, 0, 0, 0};
+    gtk_style_context_get_padding(style, 0, &extra);
+    unit_wmin += (guint) (extra.left + extra.right);
+    unit_hmin += (guint) (extra.top + extra.bottom);
+    gtk_style_context_get_border(style, 0, &extra);
+    unit_wmin += (guint) (extra.left + extra.right);
+    unit_hmin += (guint) (extra.top + extra.bottom);
 #else
-        GtkStyle *style = gtk_widget_get_style(first);
-        unit_min += (guint) (2 * style->xthickness);
-        GtkBorder *border = NULL;
-        gtk_widget_style_get(first, "inner-border", &border, NULL);
-        if (border) {
-            unit_min += (guint) (border->left + border->right);
-            gtk_border_free(border);
-        }
-#endif
+    GtkStyle *style = gtk_widget_get_style(first);
+    unit_wmin += (guint) (2 * style->xthickness);
+    unit_hmin += (guint) (2 * style->ythickness);
+    GtkBorder *border = NULL;
+    gtk_widget_style_get(first, "inner-border", &border, NULL);
+    if (border) {
+        unit_wmin += (guint) (border->left + border->right);
+        unit_hmin += (guint) (border->top + border->bottom);
+        gtk_border_free(border);
     }
-    guint unit = MAX(unit_max, unit_min);
+#endif
+    guint unit_w = MAX(unit_wmax, unit_wmin);
     for (guint i = 0; i < keyboard->key_count; i++) {
         Key *key = keyboard->keys[i];
-        guint width = unit;
+        guint width = unit_w;
         if (key->width) {
             width *= key->width;
             width /= KEY_UNIT;
@@ -186,15 +188,28 @@ void keyboard_set_widths(Keyboard *keyboard) {
             gtk_widget_set_size_request(key->button, (gint) width, -1);
         }
     }
+    gint kb_width = (gint) keyboard->row_width;
+    
+    // calculate keyboard widget height
+    gdouble dpi = gdk_screen_get_resolution(screen);
+    D printf("screen size: %ix%i (%i dpi)\n", screen_width, screen_height, (gint) dpi);
+    if (dpi < 0) { dpi = 96; }
+    guint unit_h = unit_hmin;
+    const guint unit_hpref = (guint) (KB_KEYHEIGHT_PREF * dpi);
+    const guint unit_hmax = (guint) screen_height / KB_HEIGHTMAX_FACTOR / keyboard->row_count;
+    if (unit_hmin > unit_hmax || unit_hpref > unit_hmax) {
+        unit_h = unit_hmax;
+    }
+    else if (unit_hpref >= unit_hmin) {
+        unit_h = unit_hpref;
+    }
+    D printf("hmin: %d, hmax: %d, pref: %d => %d\n", unit_hmin, unit_hmax, unit_hpref, unit_h);
+    gint kb_height = (gint) (unit_h * keyboard->row_count);
+    D printf("keyboard size: %ix%i\n", kb_width, kb_height);
+    gtk_widget_set_size_request(keyboard_box, -1, kb_height);
 }
 
-gboolean keyboard_button_off(gpointer user_data) {
-    GtkWidget *button = user_data;
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
-    return FALSE;
-}
-
-gboolean keyboard_event_press(Key *key) {
+static gboolean keyboard_event_press(Key *key) {
     Keyboard *keyboard = key->keyboard;
     GtkWidget *button = key->button;
     if (key->modifier) {
@@ -202,14 +217,14 @@ gboolean keyboard_event_press(Key *key) {
     } else {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     }
-    KBtype kb_type = kbstate_to_kbtype(keyboard->modifiers);
+    KBtype kb_type = kbstate_to_kbtype(keyboard->modifier_mask);
     if (modifier_only_caps(keyboard)) {
         // only caps lock
         if (!key->obey_caps) { kb_type = KBT_DEFAULT; }
     }
     D printf("press: %s\n", gdk_keyval_name(key->keyval[kb_type]));
     D printf("modifier: %u\n", key->modifier);
-    D printf("modifiers: %u\n", keyboard->modifiers);
+    D printf("modifier_mask: %u\n", keyboard->modifier_mask);
     guint keyval = key->keyval[kb_type];
     if (!keyval && !key->modifier) {
         if (kb_type == KBT_DEFAULT || (keyval = key->keyval[KBT_DEFAULT]) == 0) {
@@ -218,7 +233,7 @@ gboolean keyboard_event_press(Key *key) {
         }
     }
     if (key->modifier) {
-        keyboard->modifiers ^= key->modifier;
+        keyboard->modifier_mask ^= key->modifier;
         if (kbstate_to_kbtype(key->modifier)) {
             keyboard_set_layout(keyboard);
         }
@@ -232,7 +247,7 @@ gboolean keyboard_event_press(Key *key) {
     }
     GdkEvent *event = gdk_event_new(GDK_KEY_PRESS);
     event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(button)));
-    event->key.state = (keyboard->modifiers & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
+    event->key.state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
     event->key.hardware_keycode = (guint16) keys[0].keycode;
     event->key.keyval = keyval;
     event->key.send_event = FALSE;
@@ -248,12 +263,12 @@ gboolean keyboard_event_press(Key *key) {
     return TRUE;
 }
 
-gboolean keyboard_event_release(gpointer data) {
+static gboolean keyboard_event_release(gpointer data) {
     Key *key = data;
     Keyboard *keyboard = key->keyboard;
     GtkWidget *button = key->button;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
-    KBtype kb_type = kbstate_to_kbtype(keyboard->modifiers);
+    KBtype kb_type = kbstate_to_kbtype(keyboard->modifier_mask);
     if (modifier_only_caps(keyboard) && !key->obey_caps) {
         kb_type = KBT_DEFAULT;
     }
@@ -264,7 +279,7 @@ gboolean keyboard_event_release(gpointer data) {
         return FALSE;
     }
     
-    if (keyboard->modifiers & KB_MODIFIERS_SET_MASK) {
+    if (keyboard->modifier_mask & KB_MODIFIERS_SET_MASK) {
         keyboard_reset_modifiers(keyboard);
         keyboard_set_layout(keyboard);
     }
@@ -276,7 +291,7 @@ gboolean keyboard_event_release(gpointer data) {
     }
     GdkEvent *event = gdk_event_new(GDK_KEY_RELEASE);
     event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(button)));
-    event->key.state = (keyboard->modifiers & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
+    event->key.state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
     event->key.hardware_keycode = (guint16) keys[0].keycode;
     event->key.keyval = keyval;
     event->key.send_event = FALSE;
@@ -291,7 +306,7 @@ gboolean keyboard_event_release(gpointer data) {
     return FALSE;
 }
 
-void keyboard_terminal_feed(GtkWidget *button, Key *key) {
+static void keyboard_terminal_feed(GtkWidget *button, Key *key) {
     // send characters directly via vte_terminal_feed_child()
     GtkWidget *toplevel = gtk_widget_get_toplevel(button);
     GList *box_list = gtk_container_get_children(GTK_CONTAINER(toplevel));
@@ -309,7 +324,7 @@ void keyboard_terminal_feed(GtkWidget *button, Key *key) {
     }
 
     Keyboard *keyboard = key->keyboard;
-    KBtype kb_type = kbstate_to_kbtype(keyboard->modifiers);
+    KBtype kb_type = kbstate_to_kbtype(keyboard->modifier_mask);
     if (modifier_only_caps(keyboard)) {
         // only caps lock
         if (!key->obey_caps) { kb_type = KBT_DEFAULT; }
@@ -346,7 +361,7 @@ void keyboard_key_free(Key *key) {
     }
 }
 
-void keyboard_keys_free(Key **keys) {
+static void keyboard_keys_free(Key **keys) {
     if (keys == NULL) {
         return;
     }

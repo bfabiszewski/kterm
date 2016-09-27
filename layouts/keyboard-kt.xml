@@ -6,7 +6,7 @@
   </options>
   <layout id="kt keyboard">
     <row>
-      <key>
+      <key fill="true">
         <default display="image:img/esc.png" action="escape" />
       </key>
       <key>
@@ -81,7 +81,7 @@
         <mod1 display="image:img/f12.png" action="f12" />
         <mod2 display="°" />
       </key>
-      <key width="1500" fill="true">
+      <key width="2000">
         <default display="image:img/back.png" action="backspace" />
         <shifted display="image:img/del.png" action="delete" />
       </key>

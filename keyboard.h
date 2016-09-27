@@ -68,19 +68,20 @@ typedef struct Key {
 
 typedef struct Keyboard {
     Key **keys;
-    guint32 modifiers;
+    guint32 modifier_mask;
     guint key_count;
     guint row_count;
     guint key_per_row[ROWS_MAX];
     guint unit_width;
+    guint unit_height;
     gboolean is_portrait;
     guint row_width;
 } Keyboard;
 
 
+Keyboard * build_layout(GtkWidget *parent, GError **error);
 gboolean keyboard_event(GtkWidget *button, GdkEvent *ev, Key *key);
-void keyboard_set_widths(Keyboard *keyboard);
-Keyboard * build_layout(GtkWidget *parent);
+void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard);
 void keyboard_free(Keyboard **keyboard);
 void keyboard_key_free(Key *key);
 

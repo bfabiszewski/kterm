@@ -25,7 +25,7 @@
 #include <string.h>
 #include "config.h"
 
-KTconf *parse_config() {
+KTconf *parse_config(void) {
     
     D printf("Parsing config file\n");
     
@@ -38,7 +38,7 @@ KTconf *parse_config() {
     } else {
         // set path to kterm binary's path
         gchar self[PATH_MAX], *s;
-        if (readlink("/proc/self/exe", self, sizeof(self)-1) != -1) {
+        if (readlink("/proc/self/exe", self, sizeof(self) - 1) != -1) {
             if ((s = strrchr(self, '/')) != NULL) {
                 *s = '\0';
                 snprintf(conf_path, sizeof(conf_path), "%s/%s", self, CONFIG_FILE);
@@ -49,7 +49,8 @@ KTconf *parse_config() {
     
     KTconf *conf = NULL;
     if ((conf = g_malloc(sizeof(KTconf))) == NULL) {
-        return NULL;
+        D printf("Memory allocation failed\n");
+        exit(1);
     }
     
     // defaults
