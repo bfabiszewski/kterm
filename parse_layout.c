@@ -125,8 +125,7 @@ static struct kbmodlookup kbmod[] = {
     { GDK_MOD1_MASK, "alt" },
     { GDK_MOD2_MASK, "mod1" },
     { GDK_MOD3_MASK, "mod2" },
-    { GDK_MOD4_MASK, "mod3" },
-    { GDK_MOD5_MASK, "shift" }
+    { GDK_MOD4_MASK, "mod3" }
 };
 
 /** Max size of kbmod array */

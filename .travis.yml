@@ -5,10 +5,14 @@ compiler:
   - gcc
 
 env:
-  - GTK_VERSION=3
-  - GTK_VERSION=2
+  matrix:
+    - GTK_VERSION=3
+    - GTK_VERSION=2
+  global:
+    - secure: "BWLy8kmIjokwhLqYxwuvxSaJX38+mmproeZVTbiaJJXHrIbw4TK0nAgE3HmJThdojBnHA+pSj3jCMd6qhon8+NAEjDfofhWkglLV8t8JqoaJT5qunOcnouOL7rALQeLipn6b0EQzMT2wrfRs+aJW529B67TAyA/drMDpYXtr8Dg="
 
 before_install:
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - export LIBGTK=$([ "${GTK_VERSION}" == 3 ] && echo 'libgtk-3-dev' || echo 'libgtk2.0-dev')
   - export LIBVTE=$([ "${GTK_VERSION}" == 3 ] && echo 'libvte-2.90-dev' || echo 'libvte-dev')
   - sudo apt-get update -qq
@@ -22,3 +26,13 @@ before_script:
 script:
   - ./configure $([ "${GTK_VERSION}" == 3 ] && echo '--enable-gtk3')
   - make
+
+addons:
+  coverity_scan:
+    project:
+      name: "bfabiszewski/kterm"
+      description: "kterm build submitted via Travis CI"
+    notification_email: scan.coverity@fabiszewski.net
+    build_command_prepend: "./autogen.sh && ./configure $([ '${GTK_VERSION}' == 3 ] && echo '--enable-gtk3')"
+    build_command: "make -j 4"
+    branch_pattern: master
