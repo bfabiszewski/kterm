@@ -42,7 +42,9 @@ KTconf *parse_config(void) {
     } else {
         // set path to kterm binary's path
         gchar self[PATH_MAX], *s;
-        if (readlink("/proc/self/exe", self, sizeof(self) - 1) != -1) {
+        gssize len;
+        if ((len = readlink("/proc/self/exe", self, sizeof(self) - 1)) != -1) {
+            self[len] = '\0';
             if ((s = strrchr(self, '/')) != NULL) {
                 *s = '\0';
                 snprintf(conf_path, sizeof(conf_path), "%s/%s", self, CONFIG_FILE);
