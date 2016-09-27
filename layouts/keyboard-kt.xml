@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- default keyboard layout for kindle touch -->
 <keyboard>
-  <options>
-    <!-- not yet implemented -->
-  </options>
   <layout id="kt keyboard">
     <row>
       <key fill="true">
