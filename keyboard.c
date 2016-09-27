@@ -142,8 +142,14 @@ void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
     gint screen_width = gdk_screen_get_width(screen);
+    GtkWidget *window = gtk_widget_get_toplevel(keyboard_box);
+    GtkAllocation* alloc = g_new(GtkAllocation, 1);
+    gtk_widget_get_allocation(window, alloc);
+    gint window_width = alloc->width;
+    gint window_height = alloc->height;
+    g_free(alloc);
     gboolean is_portrait = FALSE;
-    if (screen_width < screen_height) {
+    if (window_width < screen_height) {
         is_portrait = TRUE;
     }
     // count units per row
@@ -167,7 +173,7 @@ void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
         units_row_max = MAX(units_row_max, units);
     }
     guint unit_hmin = keyboard->unit_height;
-    guint unit_wmax = (units_row_max) ? ((guint) screen_width / units_row_max) : 0;
+    guint unit_wmax = (units_row_max) ? ((guint) window_width / units_row_max) : 0;
     guint unit_wmin = keyboard->unit_width;
     // add padding and border
     GtkWidget *first = keyboard->keys[0]->button;
@@ -216,10 +222,11 @@ void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
             gtk_widget_set_size_request(key->button, (gint) width, -1);
         }
     }
-    gint kb_width = screen_width;
+    gint kb_width = window_width;
     
     // calculate keyboard widget height
     gdouble dpi = gdk_screen_get_resolution(screen);
+    D printf("window size: %ix%i\n", window_width, window_height);
     D printf("screen size: %ix%i (%i dpi)\n", screen_width, screen_height, (gint) dpi);
     if (dpi < 0) { dpi = 96; }
     guint unit_h = unit_hmin;
