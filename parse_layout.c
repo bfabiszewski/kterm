@@ -532,6 +532,7 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
     Key **keys = g_malloc0(KEYS_MAX * sizeof(Key*));
     if (!keys) {
         D printf("Memory allocation failed\n");
+        fclose(fp);
         g_free(keyboard);
         return NULL;
     }
@@ -549,6 +550,7 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
     GMarkupParseContext *context = g_markup_parse_context_new(&parser, 0, &state, NULL);
     if G_UNLIKELY(!context) {
         D printf("g_markup_parse_context_new failed\n");
+        fclose(fp);
         keyboard_free(&keyboard);
         state_cleanup(&state, TRUE);
         return NULL;
