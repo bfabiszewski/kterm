@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bfabiszewski/kterm.svg?branch=master)](https://travis-ci.org/bfabiszewski/kterm)
+[![Build Status](https://travis-ci.org/bfabiszewski/kterm.svg?branch=master)](https://travis-ci.org/bfabiszewski/kterm) [![Coverity Status](https://img.shields.io/coverity/scan/10306.svg)](https://scan.coverity.com/projects/bfabiszewski-kterm)
 # \# kterm
 
 This is a simple GTK+ terminal emulator with embedded virtual keyboard. It is based on VteTerminal library. Some initial settings may be defined in [kterm.conf](kterm.conf) file. Keyboard layouts are defined in [xml config](layouts/keyboard.xml) files. The keyboard config files follow the same rules as matchbox keyboard configs (backward compatible with kterm 1.x which used embedded matchbox keyboard).
