@@ -526,6 +526,7 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
     Keyboard *keyboard = g_malloc0(sizeof(Keyboard));
     if (!keyboard) {
         D printf("Memory allocation failed\n");
+        fclose(fp);
         return NULL;
     }
     state.keyboard = keyboard;
