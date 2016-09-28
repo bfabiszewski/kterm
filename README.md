@@ -64,10 +64,12 @@ Usage: kterm [OPTIONS]
 * for Kindle build use `--enable-kindle` configure option
 * `$ make`
 * `$ sudo make install`
+
 #### Packages 
 * for Kindle Touch/Paperwhite are available at http://www.fabiszewski.net/kindle-terminal/
 
-#### GPL license
+#### License
+ * GPL version 3 or (at your option) any later version
 
 [screenshot1]:http://www.fabiszewski.net/kindle-terminal/screenshot_v2_1.png "kterm screenshot"
 [screenshot2]:http://www.fabiszewski.net/kindle-terminal/screenshot_v2_2.png "kterm screenshot"
