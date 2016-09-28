@@ -61,9 +61,9 @@ Usage: kterm [OPTIONS]
 * dependencies: [GTK+](https://github.com/GNOME/gtk) version 2 or 3, [VTE](https://github.com/GNOME/vte)
 * `$ ./autogen.sh`
 * `$ ./configure`
-* for Kindle build use `--enable-kindle` configure option
 * `$ make`
 * `$ sudo make install`
+* for Kindle build use `--enable-kindle --sysconfdir=/mnt/us/extensions/kterm` configure options. If you are cross-compiling run `make dist-kindle` instead of `make install`. It will create zip package in build directory.
 
 #### Packages 
 * for Kindle Touch/Paperwhite are available at http://www.fabiszewski.net/kindle-terminal/
