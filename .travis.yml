@@ -18,13 +18,17 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get -qq install ${LIBGTK} ${LIBVTE}
+  - sudo apt-get -qq install ${LIBGTK} ${LIBVTE} libtinfo-dev
 
 before_script:
   - ./autogen.sh
 
 script:
   - ./configure $([ "${GTK_VERSION}" == 3 ] && echo '--enable-gtk3')
+  - make
+  - make clean
+  - echo "Now testing Kindle build"
+  - ./configure --enable-kindle $([ "${GTK_VERSION}" == 3 ] && echo '--enable-gtk3')
   - make
 
 addons:
