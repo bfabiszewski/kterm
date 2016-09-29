@@ -454,12 +454,12 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
 
 #ifdef KINDLE
 /**
- * Inject custom styles.
+ * Inject custom styles (css)
  * Reason: Kindle users have limited access to style customizations.
  * This scheme may however be overriden by local styles.
  */
 static void inject_styles(void) {
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION(3,0,0)
     GError *error = NULL;
     GtkCssProvider *provider = gtk_css_provider_new();
     if (!provider) { return; }
@@ -479,7 +479,16 @@ static void inject_styles(void) {
         gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
     g_object_unref(provider);
-#else
+#endif
+}
+
+/**
+ * Inject custom styles (gtkrc)
+ * Reason: Kindle users have limited access to style customizations.
+ * This scheme may however be overriden by local styles.
+ */
+static void inject_gtkrc(void) {
+#if !GTK_CHECK_VERSION(3,0,0)
     gtk_rc_parse_string("gtk_color_scheme = \"white: #ffffff\ngray: #f0f0f0\""
                         "style \"kterm-style\" {"
                         " bg[NORMAL] = @gray"
@@ -626,6 +635,8 @@ gint main(gint argc, gchar **argv) {
     gchar *envv[TERM_ARGS_MAX] = { NULL };
     gint envc = 0;
 #ifdef KINDLE
+    // modify buttons style (gtk+ 2)
+    inject_gtkrc();
     // set short prompt
     envv[envc++] = "PS1=[\\W]\\$ ";
     // set terminfo path
@@ -684,7 +695,7 @@ gint main(gint argc, gchar **argv) {
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), TITLE);
 #ifdef KINDLE
-    // modify buttons style
+    // modify buttons style (gtk+ 3)
     inject_styles();
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 #endif
