@@ -135,7 +135,7 @@ static void keyboard_reset_modifiers(Keyboard *keyboard) {
  * @param keyboard Keyboard structure
  */
 void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
-    if G_UNLIKELY(keyboard == NULL) {
+    if G_UNLIKELY(keyboard == NULL || keyboard->key_count == 0 || keyboard->row_count == 0) {
         return;
     }
     // update geometry
