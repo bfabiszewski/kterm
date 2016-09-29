@@ -20,9 +20,6 @@
  */
 
 #include <gtk/gtk.h>
-#ifdef KINDLE
-#include <gdk/gdkx.h>
-#endif
 #include <vte/vte.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -43,6 +40,69 @@
 KTconf *conf;
 /** Global debug */
 gboolean debug = FALSE;
+
+
+#ifdef KINDLE
+/**
+ * Grab/ungrab keyboard
+ * @param window Gdk window
+ * @param grab Grab if true, ungrab if false
+ * @return True on success, false otherwise
+ */
+static gboolean keyboard_grab(GdkWindow *window, gboolean grab) {
+    GdkGrabStatus ret = GDK_GRAB_SUCCESS;
+    
+#if GTK_CHECK_VERSION(3,20,0)
+    GdkDisplay *display = gdk_display_get_default();
+    GdkSeat *seat = gdk_display_get_default_seat(display);
+    if (!seat) {
+        D printf("Getting default seat failed\n");
+        return FALSE;
+    }
+    if (grab) {
+        ret = gdk_seat_grab(seat, window, GDK_SEAT_CAPABILITY_KEYBOARD, TRUE, NULL, NULL, NULL, NULL);
+    } else {
+        gdk_seat_ungrab(seat);
+    }
+    
+#elif GTK_CHECK_VERSION(3,0,0)
+    GdkDisplay *display = gdk_display_get_default();
+    GdkDeviceManager *manager = gdk_display_get_device_manager(display);
+    if (!manager) {
+        D printf("Getting display manager failed\n");
+        return FALSE;
+    }
+    GdkDevice *pointer = gdk_device_manager_get_client_pointer(manager);
+    if (!pointer) {
+        D printf("Getting pointer failed\n");
+        return FALSE;
+    }
+    GdkDevice *keyboard = gdk_device_get_associated_device(pointer);
+    if (!keyboard || gdk_device_get_source(keyboard) != GDK_SOURCE_KEYBOARD) {
+        D printf("Getting keyboard failed\n");
+        return FALSE;
+    }
+    if (grab) {
+        ret = gdk_device_grab(keyboard, window, GDK_OWNERSHIP_NONE, TRUE, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK, NULL, GDK_CURRENT_TIME);
+    } else {
+        gdk_device_ungrab(keyboard, GDK_CURRENT_TIME);
+    }
+    
+#else
+    if (grab) {
+        ret = gdk_keyboard_grab(window, FALSE, GDK_CURRENT_TIME);
+    } else {
+        gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+    }
+#endif
+    if (ret != GDK_GRAB_SUCCESS) {
+        D printf("Keyboard grabbing failed (%d)\n", ret);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+#endif
 
 /**
  * Signals handler
@@ -74,7 +134,7 @@ static void install_signal_handlers(void) {
 static void clean_on_exit(Keyboard *keyboard) {
     D printf("cleanup\n");
 #ifdef KINDLE
-    XUngrabKeyboard(GDK_DISPLAY(), CurrentTime);
+    keyboard_grab(NULL, FALSE);
 #endif
     keyboard_free(&keyboard);
     g_free(conf);
@@ -658,8 +718,7 @@ gint main(gint argc, gchar **argv) {
 #ifdef KINDLE
     // grab keyboard
     // this is necessary for kindle, because its framework intercepts some keystrokes
-    Window root = DefaultRootWindow(GDK_DISPLAY());
-    XGrabKeyboard(GDK_DISPLAY(), root, TRUE, GrabModeAsync, GrabModeAsync, CurrentTime);
+    keyboard_grab(gtk_widget_get_window(GTK_WIDGET(window)), TRUE);
 #endif
     gtk_main();
     

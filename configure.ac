@@ -29,12 +29,11 @@ AM_COND_IF([KINDLE],
   [KINDLE_CFLAGS=-DKINDLE]
 
   [AM_COND_IF([GTK3],
-  [PKG_CHECK_MODULES([VTE], [vte-2.91], [TERMCAP_LIBS=], [PKG_CHECK_MODULES([VTE], [vte-2.90])])]
-  [PKG_CHECK_MODULES(GDK_X11, [gdk-x11-3.0])],
-  [PKG_CHECK_MODULES([VTE], [vte])]
-  [PKG_CHECK_MODULES(GDK_X11, [gdk-x11-2.0])])
+  [PKG_CHECK_MODULES([VTE], [vte-2.91], [TERMCAP_LIBS=], [PKG_CHECK_MODULES([VTE], [vte-2.90])])],
+  [PKG_CHECK_MODULES([VTE], [vte])])
 
   AC_MSG_CHECKING([whether libvte may be linked statically])
+  dnl This will fail on clang
   [VTE_STATIC_LIBS=`echo "$VTE_LIBS" | sed -e 's/\(-lvte[-.0-9]*\)/-Wl,-Bstatic \1 -Wl,-Bdynamic '$TERMCAP_LIBS'/g'`]
   saved_CFLAGS=$CFLAGS
   saved_LIBS=$LIBS
