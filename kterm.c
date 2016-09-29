@@ -455,20 +455,41 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
 #ifdef KINDLE
 /**
  * Inject custom styles.
- * Reason: Kindle users have limited access to gtkrc customizations.
- * This scheme may however be overriden by local gtkrc files.
+ * Reason: Kindle users have limited access to style customizations.
+ * This scheme may however be overriden by local styles.
  */
-static void inject_gtkrc(void) {
-    gtk_rc_parse_string
-    ("gtk_color_scheme = \"white: #ffffff\ngray: #f0f0f0\""
-     "style \"kterm-style\" {"
-     " bg[NORMAL] = @gray"
-     " bg[PRELIGHT] = @gray"
-     " bg[INSENSITIVE] = @gray"
-     " bg[ACTIVE] = @gray"
-     " bg[SELECTED] = @gray"
-     "}"
-     "widget \"*ktermKbButton\" style : lowest \"kterm-style\"");
+static void inject_styles(void) {
+#if GTK_CHECK_VERSION(3, 0, 0)
+    GError *error = NULL;
+    GtkCssProvider *provider = gtk_css_provider_new();
+    if (!provider) { return; }
+    gtk_css_provider_load_from_data(provider,
+                                    "@define-color gray #f0f0f0;"
+                                    "#ktermKbButton { background: @gray; }"
+                                    "#ktermKbButton:hover { background: @gray; }"
+                                    "#ktermKbButton:selected { background: @gray; }"
+                                    "#ktermKbButton:disabled { background: @gray; }"
+                                    "#ktermKbButton:active { background: @gray; }"
+                                    , -1, &error);
+    if G_UNLIKELY(error) {
+        D printf("Style injection failed: %s\n", error->message);
+        g_error_free(error);
+    } else {
+        GdkScreen *screen = gdk_screen_get_default();
+        gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+    g_object_unref(provider);
+#else
+    gtk_rc_parse_string("gtk_color_scheme = \"white: #ffffff\ngray: #f0f0f0\""
+                        "style \"kterm-style\" {"
+                        " bg[NORMAL] = @gray"
+                        " bg[PRELIGHT] = @gray"
+                        " bg[INSENSITIVE] = @gray"
+                        " bg[ACTIVE] = @gray"
+                        " bg[SELECTED] = @gray"
+                        "}"
+                        "widget \"*ktermKbButton\" style : lowest \"kterm-style\"");
+#endif
 }
 #endif
 
@@ -605,8 +626,6 @@ gint main(gint argc, gchar **argv) {
     gchar *envv[TERM_ARGS_MAX] = { NULL };
     gint envc = 0;
 #ifdef KINDLE
-    // modify buttons style
-    inject_gtkrc();
     // set short prompt
     envv[envc++] = "PS1=[\\W]\\$ ";
     // set terminfo path
@@ -654,7 +673,7 @@ gint main(gint argc, gchar **argv) {
 
     GError *error = NULL;
     gtk_init(&argc, &argv);
-    
+
     install_signal_handlers();
     
     // window
@@ -665,6 +684,8 @@ gint main(gint argc, gchar **argv) {
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), TITLE);
 #ifdef KINDLE
+    // modify buttons style
+    inject_styles();
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 #endif
     // box
