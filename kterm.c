@@ -318,16 +318,18 @@ static void reverse_colors(GtkWidget *widget, gpointer terminal) {
  * @param alloc Size allocation
  * @param keyboard Keyboard structure
  */
-static gboolean keyboard_update(GtkWidget *keyboard_box, GtkAllocation *alloc, Keyboard *keyboard) {
+static void keyboard_update(GtkWidget *keyboard_box, GtkAllocation *alloc, Keyboard *keyboard) {
+    UNUSED(keyboard_box);
+    GdkScreen *screen = gdk_screen_get_default();
+    gint screen_height = gdk_screen_get_height(screen);
     static gint saved_width = -1;
     static gint saved_height = -1;
-    if (conf->kb_on && alloc && (alloc->width != saved_width || alloc->height != saved_height)) {
+    if (conf->kb_on && alloc && (alloc->width != saved_width || screen_height != saved_height)) {
         printf("set keyboard size: %ix%i\n", alloc->width, alloc->height);
-        keyboard_set_size(keyboard_box, keyboard);
+        g_idle_add(keyboard_set_size, keyboard);
         saved_width = alloc->width;
-        saved_height = alloc->height;
+        saved_height = screen_height;
     }
-    return FALSE;
 }
 
 #ifdef KINDLE
@@ -758,10 +760,8 @@ gint main(gint argc, gchar **argv) {
 #endif
     
     gtk_widget_show_all(window);
-    gtk_window_maximize(GTK_WINDOW(window));
-
-    keyboard_set_size(keyboard_box, keyboard);
     g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
+    gtk_window_maximize(GTK_WINDOW(window));
     
     gtk_main();
     

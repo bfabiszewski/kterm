@@ -131,12 +131,14 @@ static void keyboard_reset_modifiers(Keyboard *keyboard) {
 
 /**
  * Calculate and set key button sizes
- * @param keyboard_box Keyboard widget
- * @param keyboard Keyboard structure
+ * @param data Keyboard structure
+ * @return Always false to cancel timeout, as called with g_timeout_add();
  */
-void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
+gboolean keyboard_set_size(gpointer data) {
+    Keyboard *keyboard = data;
+    GtkWidget *keyboard_box = keyboard->container;
     if G_UNLIKELY(keyboard == NULL || keyboard->key_count == 0 || keyboard->row_count == 0) {
-        return;
+        return FALSE;
     }
     // update geometry
     GdkScreen *screen = gdk_screen_get_default();
@@ -199,6 +201,7 @@ void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
     }
 #endif
     guint unit_w = MAX(unit_wmax, unit_wmin);
+    D printf("wmin: %d, wmax: %d => %d\n", unit_wmin, unit_wmax, unit_w);
     for (guint i = 0; i < keyboard->key_count; i++) {
         Key *key = keyboard->keys[i];
         guint width = unit_w;
@@ -242,6 +245,7 @@ void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard) {
     gint kb_height = (gint) (unit_h * keyboard->row_count);
     D printf("keyboard size: %ix%i\n", kb_width, kb_height);
     gtk_widget_set_size_request(keyboard_box, -1, kb_height);
+    return FALSE;
 }
 
 /**

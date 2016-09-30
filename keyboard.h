@@ -93,12 +93,13 @@ typedef struct Keyboard {
     guint key_per_row[ROWS_MAX]; /** Keys count in each row */
     guint unit_width; /** Precalculated minimum width of a button */
     guint unit_height; /** Precalculated minimum height of a button */
+    GtkWidget *container; /** Keyboard container */
 } Keyboard;
 
 
 Keyboard * build_layout(GtkWidget *parent, GError **error);
 gboolean keyboard_event(GtkWidget *button, GdkEvent *ev, Key *key);
-void keyboard_set_size(GtkWidget *keyboard_box, Keyboard *keyboard);
+gboolean keyboard_set_size(gpointer data);
 void keyboard_free(Keyboard **keyboard);
 void keyboard_key_free(Key *key);
 
