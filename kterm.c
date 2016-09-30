@@ -102,6 +102,18 @@ static gboolean keyboard_grab(GdkWindow *window, gboolean grab) {
     return TRUE;
 }
 
+/**
+ * Grab keyboard callback
+ * @param widget Calling widget
+ * @param event Gdk event
+ * @return Always false to propagate event
+ */
+gboolean grab_keyboard_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
+    UNUSED(event);
+    UNUSED(data);
+    keyboard_grab(gtk_widget_get_window(widget), TRUE);
+    return FALSE;
+}
 #endif
 
 /**
@@ -740,6 +752,10 @@ gint main(gint argc, gchar **argv) {
     g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), vbox);
     g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), vbox);
     g_signal_connect(terminal, "motion-notify-event", G_CALLBACK(button_event), vbox);
+#ifdef KINDLE
+    g_object_set(window, "events", GDK_VISIBILITY_NOTIFY_MASK, NULL);
+    g_signal_connect(window, "visibility-notify-event", G_CALLBACK(grab_keyboard_cb), NULL);
+#endif
     
     gtk_widget_show_all(window);
     gtk_window_maximize(GTK_WINDOW(window));
@@ -747,11 +763,6 @@ gint main(gint argc, gchar **argv) {
     keyboard_set_size(keyboard_box, keyboard);
     g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
     
-#ifdef KINDLE
-    // grab keyboard
-    // this is necessary for kindle, because its framework intercepts some keystrokes
-    keyboard_grab(gtk_widget_get_window(GTK_WIDGET(window)), TRUE);
-#endif
     gtk_main();
     
     clean_on_exit(keyboard);
