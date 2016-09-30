@@ -48,6 +48,7 @@ Usage: kterm [OPTIONS]
 ![kterm landscape mode][screenshot3]
 
 #### Changelog
+  * **2.1**: mainly small bugfixes, compilation warnings
   * **2.0**: major rewrite; added native keyboard which replaces matchbox keyboard - better stability, easier to compile and maintain; updated to build on modern frameworks; added autotools project; option to rotate screen on Kindle; option to add environment variables on command line
   * **0.7**: keyboard layout for Paperwhite (by nasser), also larger labels for Touch keyboard
   * **0.6**: parameter for choosing different keyboard layout from config and command line; new keyboard layout for Touch and Paperwhite (by cubemike99 and DuckieTigger)
