@@ -749,7 +749,7 @@ gint main(gint argc, gchar **argv) {
     gtk_box_pack_start(GTK_BOX(vbox), terminal, TRUE, TRUE, 0);
     
     // signals
-    g_signal_connect(window, "delete_event", G_CALLBACK(exit_on_signal), NULL);
+    g_signal_connect(window, "delete_event", G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(terminal, "child-exited", G_CALLBACK(terminal_exit), NULL);
     g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), vbox);
     g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), vbox);
