@@ -736,6 +736,7 @@ gint main(gint argc, gchar **argv) {
         exit(1);
     }
     gtk_box_pack_end(GTK_BOX(vbox), keyboard_box, FALSE, FALSE, 0);
+    keyboard_set_size(keyboard);
     
     GtkWidget *terminal = vte_terminal_new();
     setup_terminal(terminal, command, envv, &error);
@@ -745,7 +746,6 @@ gint main(gint argc, gchar **argv) {
         exit(1);
     }
     gtk_widget_set_name(terminal, "termBox");
-    gtk_widget_grab_focus(terminal);
     gtk_box_pack_start(GTK_BOX(vbox), terminal, TRUE, TRUE, 0);
     
     // signals
@@ -765,7 +765,7 @@ gint main(gint argc, gchar **argv) {
     }
     g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
     gtk_window_maximize(GTK_WINDOW(window));
-    
+    gtk_widget_grab_focus(terminal);
     gtk_main();
     
     clean_on_exit(keyboard);
