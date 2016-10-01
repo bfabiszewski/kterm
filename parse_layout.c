@@ -487,11 +487,9 @@ static void parser_end_node_cb(GMarkupParseContext *context, const gchar *node_n
 /**
  * Recursively free state structure
  * @param state Parser state
- * @param with_container Destroy container if true
  */
-static void state_cleanup(State *state, gboolean with_container) {
+static void state_cleanup(State *state) {
     if (state) {
-        if (with_container && state->container) { gtk_widget_destroy(state->container); }
         if (state->current_row) { gtk_widget_destroy(state->current_row); }
         if (state->current_key) { keyboard_key_free(state->current_key); }
     }
@@ -538,12 +536,7 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
         return NULL;
     }
     keyboard->keys = keys;
-#if GTK_CHECK_VERSION(3,0,0)
-    state.container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_set_homogeneous(GTK_BOX(state.container), TRUE);
-#else
-    state.container = gtk_vbox_new(TRUE, 0);
-#endif
+    state.container = parent;
     GMarkupParser parser;
     memset(&parser, 0, sizeof(GMarkupParser));
     parser.start_element = parser_start_node_cb;
@@ -553,7 +546,7 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
         D printf("g_markup_parse_context_new failed\n");
         fclose(fp);
         keyboard_free(&keyboard);
-        state_cleanup(&state, TRUE);
+        state_cleanup(&state);
         return NULL;
     }
     gchar buf[500];
@@ -574,9 +567,8 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
         keyboard->keys = g_realloc(keyboard->keys, keyboard->key_count * sizeof(Key*));
         keyboard->container = state.container;
     }
-    gtk_box_pack_start(GTK_BOX(parent), state.container, TRUE, TRUE, 0);
     fclose(fp);
-    state_cleanup(&state, FALSE);
+    state_cleanup(&state);
     
     return keyboard;
 }
