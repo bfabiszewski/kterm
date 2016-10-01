@@ -760,6 +760,9 @@ gint main(gint argc, gchar **argv) {
 #endif
     
     gtk_widget_show_all(window);
+    if (!conf->kb_on) {
+        gtk_widget_hide(keyboard_box);
+    }
     g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
     gtk_window_maximize(GTK_WINDOW(window));
     
