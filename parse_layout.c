@@ -572,9 +572,9 @@ Keyboard * build_layout(GtkWidget *parent, GError **error) {
         keyboard_free(&keyboard);
     } else {
         keyboard->keys = g_realloc(keyboard->keys, keyboard->key_count * sizeof(Key*));
+        keyboard->container = state.container;
     }
     gtk_box_pack_start(GTK_BOX(parent), state.container, TRUE, TRUE, 0);
-    keyboard->container = state.container;
     fclose(fp);
     state_cleanup(&state, FALSE);
     
