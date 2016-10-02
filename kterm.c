@@ -29,6 +29,9 @@
 #include <signal.h>
 #include <getopt.h>
 #include "keyboard.h"
+#ifdef KINDLE
+#include "kindle.h"
+#endif
 #include "config.h"
 
 /** Vte version check for early versions */
@@ -40,81 +43,6 @@
 KTconf *conf;
 /** Global debug */
 gboolean debug = FALSE;
-
-
-#ifdef KINDLE
-/**
- * Grab/ungrab keyboard
- * @param window Gdk window
- * @param grab Grab if true, ungrab if false
- * @return True on success, false otherwise
- */
-static gboolean keyboard_grab(GdkWindow *window, gboolean grab) {
-    GdkGrabStatus ret = GDK_GRAB_SUCCESS;
-    
-#if GTK_CHECK_VERSION(3,20,0)
-    GdkDisplay *display = gdk_display_get_default();
-    GdkSeat *seat = gdk_display_get_default_seat(display);
-    if (!seat) {
-        D printf("Getting default seat failed\n");
-        return FALSE;
-    }
-    if (grab) {
-        ret = gdk_seat_grab(seat, window, GDK_SEAT_CAPABILITY_KEYBOARD, TRUE, NULL, NULL, NULL, NULL);
-    } else {
-        gdk_seat_ungrab(seat);
-    }
-    
-#elif GTK_CHECK_VERSION(3,0,0)
-    GdkDisplay *display = gdk_display_get_default();
-    GdkDeviceManager *manager = gdk_display_get_device_manager(display);
-    if (!manager) {
-        D printf("Getting display manager failed\n");
-        return FALSE;
-    }
-    GdkDevice *pointer = gdk_device_manager_get_client_pointer(manager);
-    if (!pointer) {
-        D printf("Getting pointer failed\n");
-        return FALSE;
-    }
-    GdkDevice *keyboard = gdk_device_get_associated_device(pointer);
-    if (!keyboard || gdk_device_get_source(keyboard) != GDK_SOURCE_KEYBOARD) {
-        D printf("Getting keyboard failed\n");
-        return FALSE;
-    }
-    if (grab) {
-        ret = gdk_device_grab(keyboard, window, GDK_OWNERSHIP_NONE, TRUE, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK, NULL, GDK_CURRENT_TIME);
-    } else {
-        gdk_device_ungrab(keyboard, GDK_CURRENT_TIME);
-    }
-    
-#else
-    if (grab) {
-        ret = gdk_keyboard_grab(window, FALSE, GDK_CURRENT_TIME);
-    } else {
-        gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-    }
-#endif
-    if (ret != GDK_GRAB_SUCCESS) {
-        D printf("Keyboard grabbing failed (%d)\n", ret);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/**
- * Grab keyboard callback
- * @param widget Calling widget
- * @param event Gdk event
- * @return Always false to propagate event
- */
-gboolean grab_keyboard_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
-    UNUSED(event);
-    UNUSED(data);
-    keyboard_grab(gtk_widget_get_window(widget), TRUE);
-    return FALSE;
-}
-#endif
 
 /**
  * Signals handler
@@ -147,6 +75,7 @@ static void clean_on_exit(Keyboard *keyboard) {
     D printf("cleanup\n");
 #ifdef KINDLE
     keyboard_grab(NULL, FALSE);
+    orientation_restore();
 #endif
     keyboard_free(&keyboard);
     g_free(conf);
@@ -334,31 +263,6 @@ static void keyboard_update(GtkWidget *keyboard_box, GtkAllocation *alloc, Keybo
 
 #ifdef KINDLE
 /**
- * Rotate Kindle screen
- */
-static void lipc_rotate(void) {
-    GdkScreen *screen = gdk_screen_get_default();
-    gint screen_height = gdk_screen_get_height(screen);
-    gint screen_width = gdk_screen_get_width(screen);
-    const gchar *command;
-    if (screen_width > screen_height) {
-        command = "/usr/bin/lipc-set-prop com.lab126.winmgr orientationLock U";
-    } else {
-        command = "/usr/bin/lipc-set-prop com.lab126.winmgr orientationLock R";
-    }
-    D printf("Executing: /bin/sh -c %s\n", command);
-    switch (fork()) {
-        case 0:
-            if (execl("/bin/sh", "sh", "-c", command, NULL) < 0) {
-                exit(1);
-            }
-        case -1:
-            D printf("Failed to fork\n");
-            break;
-    }
-}
-
-/**
  * Rotate screen menu callback
  * @param widget Calling widget
  * @param box Kterm container
@@ -366,8 +270,15 @@ static void lipc_rotate(void) {
 static void screen_rotate(GtkWidget *widget, gpointer box) {
     UNUSED(widget);
     UNUSED(box);
-    // call lipc
-    lipc_rotate();
+    char request = 0;
+    if (conf->orientation == 'U') {
+        request = 'R';
+    } else {
+        request = 'U';
+    }
+    if (set_orientation(request)) {
+        conf->orientation = request;
+    }
 }
 #endif
 
@@ -559,6 +470,9 @@ static void usage(void) {
     printf("        -h           show this message\n");
     printf("        -k <0|1>     keyboard off/on\n");
     printf("        -l <path>    keyboard layout config path\n");
+#ifdef KINDLE
+    printf("        -o <U|R|L>   screen orientation (up, right, left)\n");
+#endif
     printf("        -s <size>    font size\n");
     printf("        -v           print version and exit\n");
     exit(0);
@@ -656,7 +570,7 @@ gint main(gint argc, gchar **argv) {
     // set terminfo path
     envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
-    while((c = getopt(argc, argv, "c:de:E:f:hk:l:s:v")) != -1) {
+    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;
@@ -680,6 +594,9 @@ gint main(gint argc, gchar **argv) {
             case 'l':
                 snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", optarg);
                 break;
+            case 'o':
+                if (optarg[0] == 'U' || optarg[0] == 'R' || optarg[0] == 'L') { conf->orientation = optarg[0]; }
+                break;
             case 's':
                 i = atoi(optarg);
                 if (i > 0) conf->font_size = (guint) i;
@@ -695,7 +612,11 @@ gint main(gint argc, gchar **argv) {
                 break;
         }
     }
-
+    
+#ifdef KINDLE
+    orientation_init();
+#endif
+    
     GError *error = NULL;
     gtk_init(&argc, &argv);
 

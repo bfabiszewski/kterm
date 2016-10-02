@@ -106,6 +106,8 @@ typedef struct {
     gchar font_family[50]; /** Terminal font family */
     guint font_size;  /** Terminal font size */
     gchar kb_conf_path[PATH_MAX];  /** Keyboard config path */
+    gchar orientation;  /** Screen orientation: 'U', 'R' or 'L' */
+    gchar orientation_saved;  /** Initial screen orientation: 'U', 'R' or 'L' */
 } KTconf;
 
 KTconf * parse_config(void);

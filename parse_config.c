@@ -65,6 +65,7 @@ KTconf *parse_config(void) {
     conf->font_size = VTE_FONT_SIZE;
     snprintf(conf->font_family, sizeof(conf->font_family), "%s", VTE_FONT_FAMILY);
     snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", KB_FULL_PATH);
+    conf->orientation = 0;
     
     FILE *fp;
     if ((fp = fopen(conf_path, "r")) == NULL) {
@@ -76,12 +77,20 @@ KTconf *parse_config(void) {
     while (fgets(buf, sizeof(buf), fp)) {
         if (buf[0] == '#' || buf[0] == '\n') { continue; }
         if (!strncmp(buf, "keyboard", 8)) {
-            sscanf(buf, "keyboard = %i", &conf->kb_on);
-            D printf("kb_on = %i\n", conf->kb_on);
+            gint kb_on = -1;
+            sscanf(buf, "keyboard = %i", &kb_on);
+            if (kb_on == 0 || kb_on == 1) {
+                conf->kb_on = kb_on;
+                D printf("kb_on = %i\n", conf->kb_on);
+            }
         }
         else if (!strncmp(buf, "color_scheme", 12)) {
+            gint color_reversed = -1;
             sscanf(buf, "color_scheme = %i", &conf->color_reversed);
-            D printf("color_scheme = %i\n", conf->color_reversed);
+            if (color_reversed == 0 || color_reversed == 1) {
+                conf->color_reversed = color_reversed;
+                D printf("color_scheme = %i\n", conf->color_reversed);
+            }
         }
         else if (!strncmp(buf, "font_family", 11)) {
             gchar str[256];
@@ -90,14 +99,26 @@ KTconf *parse_config(void) {
             D printf("font_family = %s\n", conf->font_family);
         }
         else if (!strncmp(buf, "font_size", 9)) {
-            sscanf(buf, "font_size = %u", &conf->font_size);
-            D printf("font_size = %u\n", conf->font_size);
+            guint font_size = 0;
+            sscanf(buf, "font_size = %u", &font_size);
+            if (font_size > 0) {
+                conf->font_size = font_size;
+                D printf("font_size = %u\n", conf->font_size);
+            }
         }
         else if (!strncmp(buf, "kb_conf_path", 12)) {
             gchar str2[PATH_MAX];
             sscanf(buf, "kb_conf_path = \"%[^\"\n\r]\"", str2); // need double quotes around path
             snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", str2);
             D printf("kb_conf_path = %s\n", conf->kb_conf_path);
+        }
+        else if (!strncmp(buf, "orientation", 11)) {
+            gchar orientation = 0;
+            sscanf(buf, "orientation = %c", &orientation);
+            if (orientation == 'U' || orientation == 'R' || orientation == 'L') {
+                conf->orientation = orientation;
+                D printf("orientation = %c\n", conf->orientation);
+            }
         }
     }
     
