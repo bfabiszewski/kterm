@@ -33,4 +33,7 @@ void orientation_restore(void);
 gboolean grab_keyboard_cb(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean keyboard_grab(GdkWindow *window, gboolean grab);
 
+void inject_gtkrc(void);
+void inject_styles(void);
+
 #endif /* kindle_h */
