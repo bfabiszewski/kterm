@@ -86,7 +86,7 @@ KTconf *parse_config(void) {
         }
         else if (!strncmp(buf, "color_scheme", 12)) {
             gint color_reversed = -1;
-            sscanf(buf, "color_scheme = %i", &conf->color_reversed);
+            sscanf(buf, "color_scheme = %i", &color_reversed);
             if (color_reversed == 0 || color_reversed == 1) {
                 conf->color_reversed = color_reversed;
                 D printf("color_scheme = %i\n", conf->color_reversed);
