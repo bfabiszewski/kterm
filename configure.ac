@@ -42,11 +42,12 @@ AM_COND_IF([KINDLE],
   AC_LINK_IFELSE(
     [AC_LANG_PROGRAM([[#include <vte/vte.h>]],[[vte_terminal_new();]])],
     [AC_MSG_RESULT([yes]); VTE_LIBS=$VTE_STATIC_LIBS],
-    [AC_MSG_RESULT([no])])
+    [AC_MSG_RESULT([no])]
+    [AC_MSG_WARN(building for Kindle with non-static libvte)])
   LIBS=$saved_LIBS
   CFLAGS=$saved_CFLAGS
 
-  PKG_CHECK_MODULES([DBUS], [dbus-1], [AC_DEFINE(HAVE_DBUS, 1)])
+  PKG_CHECK_MODULES([DBUS], [dbus-1], [AC_DEFINE(HAVE_DBUS, 1)], [AC_MSG_WARN(screen rotation on Kindle will be disabled without dbus)])
 ],[
   AM_COND_IF([GTK3],
   [PKG_CHECK_MODULES([VTE], [vte-2.91], [], [PKG_CHECK_MODULES([VTE], [vte-2.90])])],
