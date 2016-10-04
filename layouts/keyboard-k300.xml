@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- keyboard for 299 dpi kindles: pw3, kv, koa -->
+<keyboard>
+  <layout id="kt keyboard 299">
+    <row>
+      <key fill="true">
+        <default display="image:img-300dpi/esc.png" action="escape" />
+      </key>
+      <key>
+        <default display="1" />
+        <shifted display="!" />
+        <mod1 display="image:img-300dpi/f1.png" action="f1" />
+        <mod2 display="¹" />
+      </key>
+      <key>
+        <default display="2" />
+        <shifted display="@" />
+        <mod1 display="image:img-300dpi/f2.png" action="f2" />
+        <mod2 display="²" />
+      </key>
+      <key>
+        <default display="3" />
+        <shifted display="#" />
+        <mod1 display="image:img-300dpi/f3.png" action="f3" />
+        <mod2 display="€" />
+      </key>
+      <key>
+        <default display="4" />
+        <shifted display="$" />
+        <mod1 display="image:img-300dpi/f4.png" action="f4" />
+        <mod2 display="£" />
+      </key>
+      <key>
+        <default display="5" />
+        <shifted display="%" />
+        <mod1 display="image:img-300dpi/f5.png" action="f5" />
+        <mod2 display="¥" />
+      </key>
+      <key>
+        <default display="6" />
+        <shifted display="^" />
+        <mod1 display="image:img-300dpi/f6.png" action="f6" />
+        <mod2 display="¢" />
+      </key>
+      <key>
+        <default display="7" />
+        <shifted display="&amp;" />
+        <mod1 display="image:img-300dpi/f7.png" action="f7" />
+        <mod2 display="¡" />
+      </key>
+      <key>
+        <default display="8" />
+        <shifted display="*" />
+        <mod1 display="image:img-300dpi/f8.png" action="f8" />
+        <mod2 display="¿" />
+      </key>
+      <key>
+        <default display="9" />
+        <shifted display="(" />
+        <mod1 display="image:img-300dpi/f9.png" action="f9" />
+        <mod2 display="¶" />
+      </key>
+      <key>
+        <default display="0" />
+        <shifted display=")" />
+        <mod1 display="image:img-300dpi/f10.png" action="f10" />
+        <mod2 display="§" />
+      </key>
+      <key>
+        <default display="-" />
+        <shifted display="_" />
+        <mod1 display="image:img-300dpi/f11.png" action="f11" />
+        <mod2 display="µ" />
+      </key>
+      <key>
+        <default display="+" />
+        <shifted display="=" />
+        <mod1 display="image:img-300dpi/f12.png" action="f12" />
+        <mod2 display="°" />
+      </key>
+      <key width="2000">
+        <default display="image:img-300dpi/back.png" action="backspace" />
+        <shifted display="image:img-300dpi/del.png" action="delete" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img-300dpi/tab.png" action="tab" />
+      </key>
+      <key obey-caps="true">
+        <default display="q" />
+        <shifted display="Q" />
+        <mod1 display="à" />
+        <mod2 display="À" />
+      </key>
+      <key obey-caps="true">
+        <default display="w" />
+        <shifted display="W" />
+        <mod1 display="á" />
+        <mod2 display="Á" />
+      </key>
+      <key obey-caps="true">
+        <default display="e" />
+        <shifted display="E" />
+        <mod1 display="ą" />
+        <mod2 display="Ą" />
+      </key>
+      <key obey-caps="true">
+        <default display="r" />
+        <shifted display="R" />
+        <mod1 display="â" />
+        <mod2 display="Â" />
+      </key>
+      <key obey-caps="true">
+        <default display="t" />
+        <shifted display="T" />
+        <mod1 display="ä" />
+        <mod2 display="Ä" />
+      </key>
+      <key obey-caps="true">
+        <default display="y" />
+        <shifted display="Y" />
+        <mod1 display="å" />
+        <mod2 display="Å" />
+      </key>
+      <key obey-caps="true">
+        <default display="u" />
+        <shifted display="U" />
+        <mod1 display="ć" />
+        <mod2 display="Ć" />
+      </key>
+      <key obey-caps="true">
+        <default display="i" />
+        <shifted display="I" />
+        <mod1 display="ç" />
+        <mod2 display="Ç" />
+      </key>
+      <key obey-caps="true">
+        <default display="o" />
+        <shifted display="O" />
+        <mod1 display="è" />
+        <mod2 display="È" />
+      </key>
+      <key obey-caps="true">
+        <default display="p" />
+        <shifted display="P" />
+        <mod1 display="é" />
+        <mod2 display="É" />
+      </key>
+      <key>
+        <default display="[" />
+        <shifted display="{" />
+        <mod1 display="ę" />
+        <mod2 display="Ę" />
+      </key>
+      <key>
+        <default display="]" />
+        <shifted display="}" />
+        <mod1 display="ë" />
+        <mod2 display="Ë" />
+      </key>
+      <key>
+        <default display="\" />
+        <shifted display="|" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img-300dpi/capslk.png" action="modifier:caps" />
+      </key>
+      <key obey-caps="true">
+        <default display="a" />
+        <shifted display="A" />
+        <mod1 display="ì" />
+        <mod2 display="Ì" />
+      </key>
+      <key obey-caps="true">
+        <default display="s" />
+        <shifted display="S" />
+        <mod1 display="í" />
+        <mod2 display="Í" />
+      </key>
+      <key obey-caps="true">
+        <default display="d" />
+        <shifted display="D" />
+        <mod1 display="î" />
+        <mod2 display="Î" />
+      </key>
+      <key obey-caps="true">
+        <default display="f" />
+        <shifted display="F" />
+        <mod1 display="ł" />
+        <mod2 display="Ł" />
+      </key>
+      <key obey-caps="true">
+        <default display="g" />
+        <shifted display="G" />
+        <mod1 display="ñ" />
+        <mod2 display="Ñ" />
+      </key>
+      <key obey-caps="true">
+        <default display="h" />
+        <shifted display="H" />
+        <mod1 display="ń" />
+        <mod2 display="Ń" />
+      </key>
+      <key obey-caps="true">
+        <default display="j" />
+        <shifted display="J" />
+        <mod1 display="ó" />
+        <mod2 display="Ó" />
+      </key>
+      <key obey-caps="true">
+        <default display="k" />
+        <shifted display="K" />
+        <mod1 display="ò" />
+        <mod2 display="Ò" />
+      </key>
+      <key obey-caps="true">
+        <default display="l" />
+        <shifted display="L" />
+        <mod1 display="ø" />
+        <mod2 display="Ø" />
+      </key>
+      <key>
+        <default display=";" />
+        <shifted display=":" />
+        <mod1 display="ö" />
+        <mod2 display="Ö" />
+      </key>
+      <key>
+        <default display="'" />
+        <shifted display="&quot;" />
+        <mod1 display="ś" />
+        <mod2 display="Ś" />
+      </key>
+      <key width="2000">
+        <default display="image:img-300dpi/return.png" action="return" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img-300dpi/shift.png" action="modifier:shift" />
+      </key>
+      <key>
+        <default display="`" />
+        <shifted display="~" />
+      </key>
+      <key obey-caps="true">
+        <default display="z" />
+        <shifted display="Z" />
+        <mod1 display="ß" />
+        <mod2 display="Ù" />
+      </key>
+      <key obey-caps="true">
+        <default display="x" />
+        <shifted display="X" />
+        <mod1 display="ù" />
+        <mod2 display="Ú" />
+      </key>
+      <key obey-caps="true">
+        <default display="c" />
+        <shifted display="C" />
+        <mod1 display="ú" />
+        <mod2 display="Û" />
+      </key>
+      <key obey-caps="true">
+        <default display="v" />
+        <shifted display="V" />
+        <mod1 display="û" />
+        <mod2 display="Ü" />
+      </key>
+      <key obey-caps="true">
+        <default display="b" />
+        <shifted display="B" />
+        <mod1 display="ü" />
+        <mod2 display="Ý" />
+      </key>
+      <key obey-caps="true">
+        <default display="n" />
+        <shifted display="N" />
+        <mod1 display="ý" />
+        <mod2 display="«" />
+      </key>
+      <key obey-caps="true">
+        <default display="m" />
+        <shifted display="M" />
+        <mod1 display="ÿ" />
+        <mod2 display="»" />
+      </key>
+      <key>
+        <default display="," />
+        <shifted display="&lt;" />
+        <mod1 display="ż" />
+        <mod2 display="Ż" />
+      </key>
+      <key>
+        <default display="." />
+        <shifted display="&gt;" />
+        <mod1 display="ź" />
+        <mod2 display="Ź" />
+      </key>
+      <key>
+        <default display="/" />
+        <shifted display="?" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/up.png" action="up" />
+        <shifted display="image:img-300dpi/pgup.png" action="pageup" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/shift.png" action="modifier:shift" />
+      </key>
+    </row>
+    <row>
+      <key width="1500" fill="true">
+        <default display="image:img-300dpi/ctrl.png" action="modifier:ctrl" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/alt.png" action="modifier:alt" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/sym1.png" action="modifier:mod1" />
+      </key>
+      <key width="7000">
+        <default display=" " action="space" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/sym2.png" action="modifier:mod2" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/left.png" action="left" />
+        <shifted display="image:img-300dpi/home.png" action="home" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/down.png" action="down" />
+        <shifted display="image:img-300dpi/pgdn.png" action="pagedown" />
+      </key>
+      <key>
+        <default display="image:img-300dpi/right.png" action="right" />
+        <shifted display="image:img-300dpi/end.png" action="end" />
+      </key>
+    </row>
+  </layout>
+</keyboard>

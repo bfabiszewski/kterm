@@ -39,6 +39,7 @@ Usage: kterm [OPTIONS]
         -h           show this message
         -k <0|1>     keyboard off/on
         -l <path>    keyboard layout config path
+        -o <U|R|L>   screen orientation (up, right, left)
         -s <size>    font size
         -v           print version and exit
 ```
@@ -48,6 +49,7 @@ Usage: kterm [OPTIONS]
 ![kterm landscape mode][screenshot3]
 
 #### Changelog
+  * **2.2**: fix launching kterm with hidden keyboard; add config/command line option for screen rotation (screen orientation will also be restored to initial value after quitting kterm); fix flickering at start; remove unneeded files from kindle package, add high resolution key images; some other minor issues
   * **2.1**: mainly small bugfixes, compilation warnings
   * **2.0**: major rewrite; added native keyboard which replaces matchbox keyboard - better stability, easier to compile and maintain; updated to build on modern frameworks; added autotools project; option to rotate screen on Kindle; option to add environment variables on command line
   * **0.7**: keyboard layout for Paperwhite (by nasser), also larger labels for Touch keyboard
@@ -59,7 +61,7 @@ Usage: kterm [OPTIONS]
   * **0.1**: first release
 
 #### Building
-* dependencies: [GTK+](https://github.com/GNOME/gtk) version 2 or 3, [VTE](https://github.com/GNOME/vte)
+* dependencies: [GTK+](https://github.com/GNOME/gtk) version 2 or 3 (use `--enable-gtk3`), [VTE](https://github.com/GNOME/vte), optionally [dbus](https://www.freedesktop.org/wiki/Software/dbus/) for Kindle screen rotation
 * `$ ./autogen.sh`
 * `$ ./configure`
 * `$ make`

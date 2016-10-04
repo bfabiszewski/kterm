@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- default keyboard layout for kindle touch -->
+<!-- keyboard for 167 dpi kindles: kt, kt2, kt3 -->
 <keyboard>
   <layout id="kt keyboard">
     <row>

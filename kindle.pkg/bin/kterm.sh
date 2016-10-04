@@ -1,8 +1,10 @@
 #!/bin/sh
 EXTENSION=/mnt/us/extensions/kterm
-#WIDTH=`xwininfo -root|grep Width|cut -d ':' -f 2`
-# use wider keyboard layout for screen width greater than 600 px
-#if [ ${WIDTH} -gt 600 ]; then
-#  PARAM="-l ${EXTENSION}/layouts/keyboard-wide.xml"
-#fi
+DPI=`cat /var/log/Xorg.0.log | grep DPI | sed -n 's/.*(\([0-9]\+\), [0-9]\+).*/\1/p'`
+#use different layouts for high resolution devices
+if [ ${DPI} -gt 290 ]; then
+  PARAM="-l ${EXTENSION}/layouts/keyboard-300dpi.xml"
+elif [ ${DPI} -gt 200 ]; then
+  PARAM="-l ${EXTENSION}/layouts/keyboard-200dpi.xml"
+fi
 ${EXTENSION}/bin/kterm ${PARAM}

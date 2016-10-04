@@ -25,6 +25,8 @@ dist-kindle: kterm
 	&& cp -RL kindle.pkg/* $${KTERM_TMPDIR}/kterm \
 	&& cp kterm $${KTERM_TMPDIR}/kterm/bin \
 	&& cd $${KTERM_TMPDIR} \
+	&& sed -i '.bak' 's/@VER@/$(VERSION)/' kterm/config.xml \
+	&& rm kterm/config.xml.bak \
 	&& zip -qr $(kterm_pkg) kterm \
 	&& cd - \
 	&& rm -rf $${KTERM_TMPDIR}

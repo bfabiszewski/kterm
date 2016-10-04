@@ -2,7 +2,7 @@
 <extension>
 	<information>
 		<name>kterm</name>
-		<version>2.0</version>
+		<version>@VER@</version>
 		<author>baf</author>
 		<id>kterm</id>
 	</information>
