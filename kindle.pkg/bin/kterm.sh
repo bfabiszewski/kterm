@@ -7,4 +7,4 @@ if [ ${DPI} -gt 290 ]; then
 elif [ ${DPI} -gt 200 ]; then
   PARAM="-l ${EXTENSION}/layouts/keyboard-200dpi.xml"
 fi
-${EXTENSION}/bin/kterm ${PARAM}
+${EXTENSION}/bin/kterm ${PARAM} "$@"
