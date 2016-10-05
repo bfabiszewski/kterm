@@ -73,8 +73,8 @@
         <mod2 display="µ" />
       </key>
       <key>
-        <default display="+" />
-        <shifted display="=" />
+        <default display="=" />
+        <shifted display="+" />
         <mod1 display="image:img-200dpi/f12.png" action="f12" />
         <mod2 display="°" />
       </key>

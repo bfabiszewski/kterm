@@ -80,8 +80,8 @@
         <mod2 display="image:img/micro.png" action="µ" />
       </key>
       <key>
-        <default display="image:img/plus.png" action="+" />
-        <shifted display="image:img/equals.png" action="=" />
+        <default display="image:img/equals.png" action="=" />
+        <shifted display="image:img/plus.png" action="+" />
         <mod1 display="image:img/f12.png" action="f12" />
         <mod2 display="image:img/deg.png" action="°" />
       </key>
