@@ -136,10 +136,10 @@ static void keyboard_reset_modifiers(Keyboard *keyboard) {
  */
 gboolean keyboard_set_size(gpointer data) {
     Keyboard *keyboard = data;
-    GtkWidget *keyboard_box = keyboard->container;
     if G_UNLIKELY(keyboard == NULL || keyboard->key_count == 0 || keyboard->row_count == 0) {
         return FALSE;
     }
+    GtkWidget *keyboard_box = keyboard->container;
     // update geometry
     GdkScreen *screen = gdk_screen_get_default();
     gint screen_height = gdk_screen_get_height(screen);
