@@ -26,6 +26,12 @@ PKG_CHECK_MODULES([GTK], [$gtk_package])
 
 AM_COND_IF([KINDLE],
 [
+  AC_MSG_CHECKING([whether compiler supports ARM target])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return __arm__])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no])
+     AC_MSG_WARN([building for Kindle without ARM toolchain])])
+
   dnl Libtermcap is needed for static builds with vte < 2.91
   TERMCAP_LIBS=-ltermcap
   AC_DEFINE([KINDLE], [1])
