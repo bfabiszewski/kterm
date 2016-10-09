@@ -329,13 +329,88 @@ static void toggle_keyboard(GtkWidget *widget, gpointer box) {
     }
 }
 
+#ifdef KINDLE
+/**
+ * Wrapper for g_signal_handlers_disconnect_by_func()
+ * The only reason is to avoid warnings for converting a function pointer to a void pointer.
+ * FIXME: is there a better way?
+ * @param instance: The instance to remove handlers from.
+ * @param func: The C closure callback of the handlers (useless for non-C closures).
+ * @param data: The closure data of the handlers' closures.
+ * @return The number of handlers that matched.
+ */
+static guint signal_handlers_disconnect_by_func(gpointer instance, GCallback func, gpointer data) {
+    return g_signal_handlers_disconnect_by_func(instance, *(gpointer*)&func, data);
+}
+
+/**
+ * Callback on menu deactivated signal
+ * @param widget Calling widget
+ * @param data User data
+ */
+static void menu_deactivate_cb(GtkWidget *widget, gpointer data) {
+    UNUSED(widget);
+    D printf("Menu deactivated\n");
+    GdkEventButton *event = data;
+    signal_handlers_disconnect_by_func(widget, G_CALLBACK(menu_deactivate_cb), data);
+    gdk_test_simulate_button(event->window, (gint) event->x, (gint) event->y, 1, event->state, GDK_BUTTON_RELEASE);
+    gdk_event_free((GdkEvent *) event);
+}
+#endif
+
+/**
+ * Build popup menu
+ * @param terminal Terminal widget
+ * @param box Kterm container
+ * @return Menu widget
+ */
+static GtkWidget * build_popup(GtkWidget *terminal, GtkWidget *box) {
+    // popup menu on button release
+    GtkWidget *menu = gtk_menu_new();
+    GtkWidget *fontup_item = gtk_menu_item_new_with_label("Font increase");
+    GtkWidget *fontdown_item = gtk_menu_item_new_with_label("Font decrease");
+    GtkWidget *color_item = gtk_menu_item_new_with_label("Reverse colors");
+    GtkWidget *kb_item = gtk_menu_item_new_with_label("Toggle keyboard");
+    GtkWidget *reset_item = gtk_menu_item_new_with_label("Reset terminal");
+#ifdef KINDLE
+    GtkWidget *rotate_item = gtk_menu_item_new_with_label("Screen rotate");
+#endif
+    GtkWidget *quit_item = gtk_menu_item_new_with_label("Quit");
+    
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), fontup_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), fontdown_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), color_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), kb_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), reset_item);
+#ifdef KINDLE
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), rotate_item);
+#endif
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), quit_item);
+    
+    
+    g_signal_connect(G_OBJECT(fontup_item), "activate", G_CALLBACK(fontup), (gpointer) terminal);
+    g_signal_connect(G_OBJECT(fontdown_item), "activate", G_CALLBACK(fontdown), (gpointer) terminal);
+    g_signal_connect(G_OBJECT(color_item), "activate", G_CALLBACK(reverse_colors), (gpointer) terminal);
+    g_signal_connect(G_OBJECT(kb_item), "activate", G_CALLBACK(toggle_keyboard), box);
+    g_signal_connect(G_OBJECT(reset_item), "activate", G_CALLBACK(reset_terminal), (gpointer) terminal);
+#ifdef KINDLE
+    g_signal_connect(G_OBJECT(rotate_item), "activate", G_CALLBACK(screen_rotate), box);
+#endif
+    g_signal_connect(G_OBJECT(quit_item), "activate", G_CALLBACK(gtk_main_quit), NULL);
+    
+    gtk_widget_show_all(menu);
+    return menu;
+}
+
 /**
  * Mouse button event callback
  * @param terminal Terminal widget
  * @param event Button event
  * @param box Kterm container
+ * @return True to stop processing event, false otherwise
  */
-static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointer box) {
+static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointer menu) {
+    UNUSED(terminal);
     D printf("event-type: %i\n", event->type);
     D printf("event-button: %i\n", event->button);
 #ifdef KINDLE
@@ -346,43 +421,16 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
 #ifdef KINDLE
         // ignore button click to disable paste (quite messy on kindle)
         if (event->type == GDK_BUTTON_PRESS) { return TRUE; }
+        guint button = 0;
+        // emit button 1 release on deactivate, otherwise vte enters selection mode
+        GdkEventButton *event_copy = (GdkEventButton *) gdk_event_copy((GdkEvent *) event);
+        g_signal_connect(menu, "deactivate", G_CALLBACK(menu_deactivate_cb), event_copy);
+#else
+        if (event->type == GDK_BUTTON_RELEASE) { return FALSE; }
+        guint button = event->button;
 #endif
-        // popup menu on button release
-        GtkWidget *menu = gtk_menu_new();
-        GtkWidget *fontup_item = gtk_menu_item_new_with_label("Font increase");
-        GtkWidget *fontdown_item = gtk_menu_item_new_with_label("Font decrease");
-        GtkWidget *color_item = gtk_menu_item_new_with_label("Reverse colors");
-        GtkWidget *kb_item = gtk_menu_item_new_with_label("Toggle keyboard");
-        GtkWidget *reset_item = gtk_menu_item_new_with_label("Reset terminal");
-#ifdef KINDLE
-        GtkWidget *rotate_item = gtk_menu_item_new_with_label("Screen rotate");
-#endif
-        GtkWidget *quit_item = gtk_menu_item_new_with_label("Quit");
-        
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), fontup_item);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), fontdown_item);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), color_item);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), kb_item);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), reset_item);
-#ifdef KINDLE
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), rotate_item);
-#endif
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), quit_item);
 
-
-        g_signal_connect(G_OBJECT(fontup_item), "activate", G_CALLBACK(fontup), (gpointer) terminal);
-        g_signal_connect(G_OBJECT(fontdown_item), "activate", G_CALLBACK(fontdown), (gpointer) terminal);
-        g_signal_connect(G_OBJECT(color_item), "activate", G_CALLBACK(reverse_colors), (gpointer) terminal);
-        g_signal_connect(G_OBJECT(kb_item), "activate", G_CALLBACK(toggle_keyboard), box);
-        g_signal_connect(G_OBJECT(reset_item), "activate", G_CALLBACK(reset_terminal), (gpointer) terminal);
-#ifdef KINDLE
-        g_signal_connect(G_OBJECT(rotate_item), "activate", G_CALLBACK(screen_rotate), box);
-#endif
-        g_signal_connect(G_OBJECT(quit_item), "activate", G_CALLBACK(gtk_main_quit), NULL);
-        
-        gtk_widget_show_all(menu);
-        
-        gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, event->time);
+        gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, button, event->time);
         return TRUE;
     }
     return FALSE;
@@ -393,7 +441,7 @@ static gboolean button_event(GtkWidget *terminal, GdkEventButton *event, gpointe
  * If possible check for consistent libraries usage.
  */
 static void version(void) {
-    printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n\n",
+    printf("kterm %s (vte %i.%i.%i, gtk+ %i.%i.%i)\n",
            VERSION, VTE_MAJOR_VERSION, VTE_MINOR_VERSION, VTE_MICRO_VERSION,
            GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
 #if VTE_CHECK_VERSION(0,40,0)
@@ -418,6 +466,7 @@ static void version(void) {
 #endif
     exit(0);
 }
+
 /**
  * Print usage info and exit
  */
@@ -653,17 +702,18 @@ gint main(gint argc, gchar **argv) {
     gtk_widget_set_name(terminal, "termBox");
     gtk_box_pack_start(GTK_BOX(vbox), terminal, TRUE, TRUE, 0);
     
+    GtkWidget *menu = build_popup(terminal, vbox);
     // signals
     g_signal_connect(window, "delete_event", G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(terminal, "child-exited", G_CALLBACK(terminal_exit), NULL);
-    g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), vbox);
-    g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), vbox);
-    g_signal_connect(terminal, "motion-notify-event", G_CALLBACK(button_event), vbox);
+    g_signal_connect(terminal, "button-press-event", G_CALLBACK(button_event), menu);
+    g_signal_connect(terminal, "button-release-event", G_CALLBACK(button_event), menu);
+    g_signal_connect(terminal, "motion-notify-event", G_CALLBACK(button_event), menu);
+    g_signal_connect(terminal, "realize", G_CALLBACK(grab_focus), NULL);
 #ifdef KINDLE
     g_object_set(window, "events", GDK_VISIBILITY_NOTIFY_MASK, NULL);
     g_signal_connect(window, "visibility-notify-event", G_CALLBACK(grab_keyboard_cb), NULL);
 #endif
-    g_signal_connect(terminal, "realize", G_CALLBACK(grab_focus), NULL);
     D g_signal_connect(terminal, "key-release-event", G_CALLBACK(debug_key_event), NULL);
     D g_signal_connect(terminal, "key-press-event", G_CALLBACK(debug_key_event), NULL);
     
@@ -676,6 +726,7 @@ gint main(gint argc, gchar **argv) {
     gtk_main();
     
     clean_on_exit(keyboard);
+    gtk_widget_destroy(menu);
     D printf("the end\n");
     return 0;
 }
