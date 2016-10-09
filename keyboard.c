@@ -115,6 +115,40 @@ static void keyboard_set_layout(const Keyboard *keyboard) {
 }
 
 /**
+ * Send synthetized key event
+ * @param key Key structure
+ * @param event_type Gdk key event type (press or release)
+ * @param keystate Key state
+ * @param keyval Key value
+ * @return True on success, false otherwise
+ */
+static gboolean send_key_event(Key *key, GdkEventType event_type, guint keystate, guint keyval) {
+    GdkKeymapKey *keys = NULL;
+    gint n_keys = 0;
+    if (!gdk_keymap_get_entries_for_keyval(gdk_keymap_get_default(), keyval, &keys, &n_keys)) {
+        return FALSE;
+    }
+    GdkEvent *event = gdk_event_new(event_type);
+    event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(key->button)));
+    event->key.state = keystate;
+    if (!key->modifier) { event->key.state |= (guint) keys[0].level; }
+    event->key.hardware_keycode = (guint16) keys[0].keycode;
+    event->key.keyval = keyval;
+    event->key.send_event = FALSE;
+    event->key.time = gtk_get_current_event_time();
+    event->key.is_modifier = (key->modifier != 0);
+    event->key.group = (guint8) keys[0].group;
+#if GTK_CHECK_VERSION(3,0,0)
+    // gtk3 complains about fake device
+    gdk_event_set_device(event, getkbdevice());
+#endif
+    g_free(keys);
+    gtk_main_do_event(event);
+    gdk_event_free(event);
+    return TRUE;
+}
+
+/**
  * Deactivate modifier buttons based on modifiers set
  * @param keyboard Keyboard structure
  */
@@ -122,8 +156,11 @@ static void keyboard_reset_modifiers(Keyboard *keyboard) {
     D printf("resetting modifier_mask\n");
     for (guint i = 0; i < keyboard->key_count; i++) {
         Key *key = keyboard->keys[i];
-        if (key->modifier && key->modifier != GDK_LOCK_MASK) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(key->button), FALSE);
+        if (key->modifier && (keyboard->modifier_mask & key->modifier) && key->modifier != GDK_LOCK_MASK) {
+            if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(key->button))) {
+                gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(key->button), FALSE);
+                send_key_event(key, GDK_KEY_RELEASE, 1, key->keyval[KBT_DEFAULT]);
+            }
         }
     }
     keyboard->modifier_mask &= GDK_LOCK_MASK;
@@ -266,45 +303,29 @@ static gboolean keyboard_event_press(Key *key) {
         // only caps lock
         if (!key->obey_caps) { kb_type = KBT_DEFAULT; }
     }
-    D printf("press: %s\n", gdk_keyval_name(key->keyval[kb_type]));
+    D printf("press: %s (%i)\n", gdk_keyval_name(key->keyval[kb_type]), key->keyval[kb_type]);
     D printf("modifier: %u\n", key->modifier);
     D printf("modifier_mask: %u\n", keyboard->modifier_mask);
     guint keyval = key->keyval[kb_type];
-    if (!keyval && !key->modifier) {
+    if (!keyval) {
         if (kb_type == KBT_DEFAULT || (keyval = key->keyval[KBT_DEFAULT]) == 0) {
             D printf("Empty action\n");
             return TRUE;
         }
     }
+    GdkEventType event_type = GDK_KEY_PRESS;
+    guint key_state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK);
     if (key->modifier) {
+        if (keyboard->modifier_mask & key->modifier) {
+            event_type = GDK_KEY_RELEASE;
+        }
         keyboard->modifier_mask ^= key->modifier;
-        if (kbstate_to_kbtype(key->modifier)) {
+        if (kbstate_to_kbtype(key->modifier) != KBT_DEFAULT) {
             keyboard_set_layout(keyboard);
         }
-        return TRUE;
     }
 
-    GdkKeymapKey *keys = NULL;
-    gint n_keys = 0;
-    if (!gdk_keymap_get_entries_for_keyval(gdk_keymap_get_default(), keyval, &keys, &n_keys)) {
-        return FALSE;
-    }
-    GdkEvent *event = gdk_event_new(GDK_KEY_PRESS);
-    event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(button)));
-    event->key.state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
-    event->key.hardware_keycode = (guint16) keys[0].keycode;
-    event->key.keyval = keyval;
-    event->key.send_event = FALSE;
-    event->key.time = GDK_CURRENT_TIME;
-#if GTK_CHECK_VERSION(3,0,0)
-    // gtk3 complains about fake device
-    gdk_event_set_device(event, getkbdevice());
-#endif
-    gtk_main_do_event(event);
-    gdk_event_free(event);
-    g_free(keys);
-    
-    return TRUE;
+    return send_key_event(key, event_type, key_state, keyval);
 }
 
 /**
@@ -321,37 +342,20 @@ static gboolean keyboard_event_release(gpointer data) {
     if (modifier_only_caps(keyboard) && !key->obey_caps) {
         kb_type = KBT_DEFAULT;
     }
-    D printf("release: %s\n", gdk_keyval_name(key->keyval[kb_type]));
-    guint keyval = key->keyval[kb_type];
-    if ((!keyval && kb_type == KBT_DEFAULT) || (keyval = key->keyval[KBT_DEFAULT]) == 0) {
+    D printf("release: %s (%i)\n", gdk_keyval_name(key->keyval[kb_type]), key->keyval[kb_type]);
+    guint keyval = 0;
+    if ((keyval = key->keyval[kb_type]) == 0 && (keyval = key->keyval[KBT_DEFAULT]) == 0) {
         D printf("Empty action\n");
         return FALSE;
     }
     
+    guint key_state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK);
+
+    send_key_event(key, GDK_KEY_RELEASE, key_state, keyval);
     if (keyboard->modifier_mask & KB_MODIFIERS_SET_MASK) {
         keyboard_reset_modifiers(keyboard);
         keyboard_set_layout(keyboard);
     }
-    
-    GdkKeymapKey *keys = NULL;
-    gint n_keys = 0;
-    if (!gdk_keymap_get_entries_for_keyval(gdk_keymap_get_default(), keyval, &keys, &n_keys)) {
-        return FALSE;
-    }
-    GdkEvent *event = gdk_event_new(GDK_KEY_RELEASE);
-    event->key.window = g_object_ref(gtk_widget_get_window(GTK_WIDGET(button)));
-    event->key.state = (keyboard->modifier_mask & KB_MODIFIERS_BASIC_MASK) | (guint) keys[0].level;
-    event->key.hardware_keycode = (guint16) keys[0].keycode;
-    event->key.keyval = keyval;
-    event->key.send_event = FALSE;
-    event->key.time = GDK_CURRENT_TIME;
-#if GTK_CHECK_VERSION(3,0,0)
-    // gtk3 complains about fake device
-    gdk_event_set_device(event, getkbdevice());
-#endif
-    gtk_main_do_event(event);
-    gdk_event_free(event);
-    g_free(keys);
     return FALSE;
 }
 

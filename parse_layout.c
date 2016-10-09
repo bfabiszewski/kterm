@@ -119,13 +119,13 @@ static struct kbsymlookup kbspecial[] = {
  * Lookup table name to gdk modifier type
  */
 static struct kbmodlookup kbmod[] = {
-    { GDK_SHIFT_MASK, "shift" },
-    { GDK_LOCK_MASK, "caps" },
-    { GDK_CONTROL_MASK, "ctrl" },
-    { GDK_MOD1_MASK, "alt" },
-    { GDK_MOD2_MASK, "mod1" },
-    { GDK_MOD3_MASK, "mod2" },
-    { GDK_MOD4_MASK, "mod3" }
+    { GDK_SHIFT_MASK, "shift", "Shift_L" },
+    { GDK_LOCK_MASK, "caps", "Caps_Lock" },
+    { GDK_CONTROL_MASK, "ctrl", "Control_L" },
+    { GDK_MOD1_MASK, "alt", "Alt_L" },
+    { GDK_MOD2_MASK, "mod1", "Meta_L" },
+    { GDK_MOD3_MASK, "mod2", "Super_L" },
+    { GDK_MOD4_MASK, "mod3", "Hyper_L" }
 };
 
 /** Max size of kbmod array */
@@ -320,17 +320,17 @@ static void parser_button_label(Key *key, const gchar *attribute_value, const KB
 }
 
 /**
- * Get gdk modifier type for name string
+ * Get gdk modifier data for name string
  * @param mod_str Modifier name
- * @return Gdk modifier type or zero
+ * @return Pointer to Gdk modifier data or NULL
  */
-static GdkModifierType parser_get_modtype(const gchar *mod_str) {
+static const struct kbmodlookup * parser_get_modtype(const gchar *mod_str) {
     for (guint i = 0; i < KBMOD_SIZE; i++) {
         if (!g_ascii_strcasecmp(mod_str, kbmod[i].name)) {
-            return kbmod[i].modifier;
+            return &kbmod[i];
         }
     }
-    return 0;
+    return NULL;
 }
 
 /**
@@ -357,8 +357,14 @@ static void parser_button_action(Key *key, const gchar *attribute_value, const K
     const gchar prefix[] = "modifier:";
     const guint prefix_len = sizeof(prefix) - 1;
     if (!strncmp(attribute_value, prefix, prefix_len)) {
-        key->keyval[kb_type] = 0;
-        key->modifier = parser_get_modtype(&attribute_value[prefix_len]);
+        const struct kbmodlookup *mod = parser_get_modtype(&attribute_value[prefix_len]);
+        if (mod) {
+            key->keyval[kb_type] = gdk_keyval_from_name(mod->gdk_name);
+            key->modifier = mod->modifier;
+        } else {
+            key->keyval[kb_type] = 0;
+            key->modifier = 0;
+        }
     } else {
         if (g_utf8_strlen(attribute_value, -1) == 1) {
             key->keyval[kb_type] = gdk_unicode_to_keyval(g_utf8_get_char(attribute_value));

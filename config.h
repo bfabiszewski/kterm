@@ -94,7 +94,7 @@
 
 /** Debug */
 extern gboolean debug;
-#define D if(debug)
+#define D if G_UNLIKELY(debug)
 
 /** Unused variable */
 #define UNUSED(x) (void)(x)

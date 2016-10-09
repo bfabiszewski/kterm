@@ -50,6 +50,7 @@ struct kbsymlookup {
 struct kbmodlookup {
     const GdkModifierType modifier;
     const gchar *name;
+    const gchar *gdk_name;
 };
 
 /** Mask of all kterm supported modifiers set */

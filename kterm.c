@@ -485,6 +485,28 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
 }
 
 /**
+ * Print key event debug info on callback
+ * @param widget Calling widget
+ * @param event Event
+ * @return Always false to propagate event
+ */
+static gboolean debug_key_event(GtkWidget *widget, GdkEventKey *event) {
+    printf("key event; widget: %s\n", gtk_widget_get_name(widget));
+    printf("key event; type: %s (%i)\n", (event->type == 8) ? "press" : "release", event->type);
+    printf("key event; window: %p\n", (void *) event->window);
+    printf("key event; send event: %i\n", event->send_event);
+    printf("key event; time: %i\n", event->time);
+    printf("key event; state: %i\n", event->state);
+    printf("key event; keyval: %i (%s)\n", event->keyval, gdk_keyval_name(event->keyval));
+    printf("key event; length: %i\n", event->length);
+    printf("key event; string: %s\n", event->string);
+    printf("key event; hardware_keycode: %i\n", event->hardware_keycode);
+    printf("key event; group: %i\n", event->group);
+    printf("key event; modifier: %i\n", event->is_modifier);
+    return FALSE;
+}
+
+/**
  * Display dialog with error message and clear error
  * @param window Parent window
  * @param error Error structure
@@ -630,6 +652,8 @@ gint main(gint argc, gchar **argv) {
     g_object_set(window, "events", GDK_VISIBILITY_NOTIFY_MASK, NULL);
     g_signal_connect(window, "visibility-notify-event", G_CALLBACK(grab_keyboard_cb), NULL);
 #endif
+    D g_signal_connect(terminal, "key-release-event", G_CALLBACK(debug_key_event), NULL);
+    D g_signal_connect(terminal, "key-press-event", G_CALLBACK(debug_key_event), NULL);
     
     gtk_widget_show_all(window);
     if (!conf->kb_on) {
