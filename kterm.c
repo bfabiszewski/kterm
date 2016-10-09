@@ -82,6 +82,17 @@ static void clean_on_exit(Keyboard *keyboard) {
 }
 
 /**
+ * Grab focus on callback
+ * @param widget Calling widget
+ * @param data User data
+ */
+static void grab_focus(GtkWidget *widget, gpointer data) {
+    UNUSED(data);
+    D printf("grab focus: %s\n", gtk_widget_get_name(widget)) ;
+    gtk_widget_grab_focus(widget);
+}
+
+/**
  * Terminal exit handler
  */
 static void terminal_exit(void) {
@@ -652,6 +663,7 @@ gint main(gint argc, gchar **argv) {
     g_object_set(window, "events", GDK_VISIBILITY_NOTIFY_MASK, NULL);
     g_signal_connect(window, "visibility-notify-event", G_CALLBACK(grab_keyboard_cb), NULL);
 #endif
+    g_signal_connect(terminal, "realize", G_CALLBACK(grab_focus), NULL);
     D g_signal_connect(terminal, "key-release-event", G_CALLBACK(debug_key_event), NULL);
     D g_signal_connect(terminal, "key-press-event", G_CALLBACK(debug_key_event), NULL);
     
@@ -661,7 +673,6 @@ gint main(gint argc, gchar **argv) {
     }
     g_signal_connect(keyboard_box, "size-allocate", G_CALLBACK(keyboard_update), keyboard);
     gtk_window_maximize(GTK_WINDOW(window));
-    gtk_widget_grab_focus(terminal);
     gtk_main();
     
     clean_on_exit(keyboard);
