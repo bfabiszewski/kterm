@@ -80,7 +80,7 @@
       </key>
       <key width="2000">
         <default display="image:img-200dpi/back.png" action="backspace" />
-        <shifted display="image:img-200dpi/del.png" action="delete" />
+        <mod1 display="image:img-200dpi/del.png" action="delete" />
       </key>
     </row>
     <row>
@@ -306,7 +306,7 @@
       </key>
       <key>
         <default display="image:img-200dpi/up.png" action="up" />
-        <shifted display="image:img-200dpi/pgup.png" action="pageup" />
+        <mod1 display="image:img-200dpi/pgup.png" action="pageup" />
       </key>
       <key>
         <default display="image:img-200dpi/shift.png" action="modifier:shift" />
@@ -330,15 +330,15 @@
       </key>
       <key>
         <default display="image:img-200dpi/left.png" action="left" />
-        <shifted display="image:img-200dpi/home.png" action="home" />
+        <mod1 display="image:img-200dpi/home.png" action="home" />
       </key>
       <key>
         <default display="image:img-200dpi/down.png" action="down" />
-        <shifted display="image:img-200dpi/pgdn.png" action="pagedown" />
+        <mod1 display="image:img-200dpi/pgdn.png" action="pagedown" />
       </key>
       <key>
         <default display="image:img-200dpi/right.png" action="right" />
-        <shifted display="image:img-200dpi/end.png" action="end" />
+        <mod1 display="image:img-200dpi/end.png" action="end" />
       </key>
     </row>
   </layout>
