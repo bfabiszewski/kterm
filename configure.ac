@@ -43,16 +43,16 @@ AM_COND_IF([KINDLE],
     [PKG_CHECK_MODULES([VTE], [vte])])
   PKG_CONFIG=$saved_PKG_CONFIG
 
-  AM_CONDITIONAL([TERMCAP_NEEDED], [test "x$require_termcap" = "xyes"])
-  TERMCAP_LIBS=
-  AM_COND_IF([TERMCAP_NEEDED],
-    [saved_LIBS=$LIBS
+  if test "x$require_termcap" = "xyes"; then
+     saved_LIBS=$LIBS
      LIBS=
      AC_SEARCH_LIBS([tgetent],[curses ncurses readline termcap],
        [TERMCAP_LIBS=$LIBS],
        [AC_MSG_WARN([libtermcap is needed for static build])])
      LIBS=$saved_LIBS
-    ],[])
+  else
+     TERMCAP_LIBS=
+  fi
 
   AC_MSG_CHECKING([whether libvte may be linked statically])
   dnl This will only work with gnu linker
