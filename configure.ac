@@ -33,16 +33,30 @@ AM_COND_IF([KINDLE],
      AC_MSG_WARN([building for Kindle without ARM toolchain])])
 
   dnl Libtermcap is needed for static builds with vte < 2.91
-  TERMCAP_LIBS=-ltermcap
+  require_termcap=yes
   AC_DEFINE([KINDLE], [1])
 
+  saved_PKG_CONFIG=$PKG_CONFIG
+  PKG_CONFIG="$PKG_CONFIG --static"
   AM_COND_IF([GTK3],
-    [PKG_CHECK_MODULES([VTE], [vte-2.91], [TERMCAP_LIBS=], [PKG_CHECK_MODULES([VTE], [vte-2.90])])],
+    [PKG_CHECK_MODULES([VTE], [vte-2.91], [require_termcap=no], [PKG_CHECK_MODULES([VTE], [vte-2.90])])],
     [PKG_CHECK_MODULES([VTE], [vte])])
+  PKG_CONFIG=$saved_PKG_CONFIG
+
+  AM_CONDITIONAL([TERMCAP_NEEDED], [test "x$require_termcap" = "xyes"])
+  TERMCAP_LIBS=
+  AM_COND_IF([TERMCAP_NEEDED],
+    [saved_LIBS=$LIBS
+     LIBS=
+     AC_SEARCH_LIBS([tgetent],[curses ncurses readline termcap],
+       [TERMCAP_LIBS=$LIBS],
+       [AC_MSG_WARN([libtermcap is needed for static build])])
+     LIBS=$saved_LIBS
+    ],[])
 
   AC_MSG_CHECKING([whether libvte may be linked statically])
   dnl This will only work with gnu linker
-  [VTE_STATIC_LIBS=`echo "$VTE_LIBS" | sed -e "s/\(-lvte[-_.0-9]*\)/-Wl,-Bstatic \1 -Wl,-Bdynamic $TERMCAP_LIBS/g"`]
+  [VTE_STATIC_LIBS=`echo "-Wl,--as-needed $VTE_LIBS -Wl,--no-as-needed" | sed -e "s/\(-lvte[-_.0-9]*\)/-Wl,-Bstatic \1 -Wl,-Bdynamic $TERMCAP_LIBS/g"`]
   saved_CFLAGS=$CFLAGS
   saved_LIBS=$LIBS
   CFLAGS="$GTK_CFLAGS $VTE_CFLAGS"
