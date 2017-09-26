@@ -49,6 +49,7 @@ Usage: kterm [OPTIONS]
 ![kterm landscape mode][screenshot3]
 
 #### Changelog
+  * **2.4**: fix: some special keys won't work, add path to terminfo in Kindle start script
   * **2.3**: fix: issue with uneven keyboard rows height, unresponsivness when popup menu is cancelled, autotools build and other minor bugs
   * **2.2**: fix launching kterm with hidden keyboard; add config/command line option for screen rotation (screen orientation will also be restored to initial value after quitting kterm); fix flickering at start; remove unneeded files from kindle package, add high resolution key images; some other minor issues
   * **2.1**: mainly small bugfixes, compilation warnings
