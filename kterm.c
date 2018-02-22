@@ -472,19 +472,20 @@ static void version(void) {
  */
 static void usage(void) {
     printf("Usage: kterm [OPTIONS]\n");
-    printf("        -c <0|1>     color scheme (0 light, 1 dark)\n");
-    printf("        -d           debug mode\n");
-    printf("        -e <command> execute command in kterm\n");
-    printf("        -E <var>     set environment variable\n");
-    printf("        -f <family>  font family\n");
-    printf("        -h           show this message\n");
-    printf("        -k <0|1>     keyboard off/on\n");
-    printf("        -l <path>    keyboard layout config path\n");
+    printf("        -c <0|1>      color scheme (0 light, 1 dark)\n");
+    printf("        -d            debug mode\n");
+    printf("        -e <command>  execute command in kterm\n");
+    printf("        -E <var>      set environment variable\n");
+    printf("        -f <family>   font family\n");
+    printf("        -t <encoding> terminal encoding\n");
+    printf("        -h            show this message\n");
+    printf("        -k <0|1>      keyboard off/on\n");
+    printf("        -l <path>     keyboard layout config path\n");
 #ifdef KINDLE
-    printf("        -o <U|R|L>   screen orientation (up, right, left)\n");
+    printf("        -o <U|R|L>    screen orientation (up, right, left)\n");
 #endif
-    printf("        -s <size>    font size\n");
-    printf("        -v           print version and exit\n");
+    printf("        -s <size>     font size\n");
+    printf("        -v            print version and exit\n");
     exit(0);
 }
 
@@ -520,9 +521,9 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
     vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), VTE_SCROLLBACK_LINES);
     set_terminal_font(VTE_TERMINAL(terminal), conf->font_family, (gint) conf->font_size);
 #if VTE_CHECK_VERSION(0,38,0)
-    vte_terminal_set_encoding(VTE_TERMINAL(terminal), VTE_ENCODING, NULL);
+    vte_terminal_set_encoding(VTE_TERMINAL(terminal), conf->encoding, NULL);
 #else
-    vte_terminal_set_encoding(VTE_TERMINAL(terminal), VTE_ENCODING);
+    vte_terminal_set_encoding(VTE_TERMINAL(terminal), conf->encoding);
 #endif
     vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), TRUE);
     
@@ -602,7 +603,7 @@ gint main(gint argc, gchar **argv) {
     // set terminfo path
     envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
-    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:v")) != -1) {
+    while((c = getopt(argc, argv, "c:de:E:f:t:hk:l:o:s:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;
@@ -635,6 +636,9 @@ gint main(gint argc, gchar **argv) {
                 break;
             case 'f':
                 snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
+                break;
+            case 't':
+                snprintf(conf->encoding, sizeof(conf->encoding), "%s", optarg);
                 break;
             case 'h':
                 usage();

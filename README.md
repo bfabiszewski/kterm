@@ -31,18 +31,22 @@ On Kindle menu pops up on two fingers tap in the terminal window. On other devic
 ```
 $ ./kterm -h
 Usage: kterm [OPTIONS]
-        -c <0|1>     color scheme (0 light, 1 dark)
-        -d           debug mode
-        -e <command> execute command in kterm
-        -E <var>     set environment variable
-        -f <family>  font family
-        -h           show this message
-        -k <0|1>     keyboard off/on
-        -l <path>    keyboard layout config path
-        -o <U|R|L>   screen orientation (up, right, left)
-        -s <size>    font size
-        -v           print version and exit
+        -c <0|1>      color scheme (0 light, 1 dark)
+        -d            debug mode
+        -e <command>  execute command in kterm
+        -E <var>      set environment variable
+        -f <family>   font family
+        -t <encoding> terminal encoding
+        -h            show this message
+        -k <0|1>      keyboard off/on
+        -l <path>     keyboard layout config path
+        -o <U|R|L>    screen orientation (up, right, left)
+        -s <size>     font size
+        -v            print version and exit
 ```
+
+For a list of what constitutes valid encodings, check [this list][iana-character-sets] or the list returned by `iconv -l`.
+
 #### Screenshots
 ![kterm reversed color scheme][screenshot1] 
 ![kterm hidden keyboard][screenshot2]
@@ -79,3 +83,4 @@ Usage: kterm [OPTIONS]
 [screenshot1]:http://www.fabiszewski.net/kindle-terminal/screenshot_v2_1.png "kterm screenshot"
 [screenshot2]:http://www.fabiszewski.net/kindle-terminal/screenshot_v2_2.png "kterm screenshot"
 [screenshot3]:http://www.fabiszewski.net/kindle-terminal/screenshot_v2_3.png "kterm screenshot"
+[iana-character-sets]: https://www.iana.org/assignments/character-sets/character-sets.txt
