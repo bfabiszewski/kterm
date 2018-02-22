@@ -477,7 +477,6 @@ static void usage(void) {
     printf("        -e <command>  execute command in kterm\n");
     printf("        -E <var>      set environment variable\n");
     printf("        -f <family>   font family\n");
-    printf("        -t <encoding> terminal encoding\n");
     printf("        -h            show this message\n");
     printf("        -k <0|1>      keyboard off/on\n");
     printf("        -l <path>     keyboard layout config path\n");
@@ -485,6 +484,7 @@ static void usage(void) {
     printf("        -o <U|R|L>    screen orientation (up, right, left)\n");
 #endif
     printf("        -s <size>     font size\n");
+    printf("        -t <encoding> terminal encoding\n");
     printf("        -v            print version and exit\n");
     exit(0);
 }
@@ -603,7 +603,7 @@ gint main(gint argc, gchar **argv) {
     // set terminfo path
     envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
-    while((c = getopt(argc, argv, "c:de:E:f:t:hk:l:o:s:v")) != -1) {
+    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:t:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;

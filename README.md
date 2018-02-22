@@ -36,12 +36,12 @@ Usage: kterm [OPTIONS]
         -e <command>  execute command in kterm
         -E <var>      set environment variable
         -f <family>   font family
-        -t <encoding> terminal encoding
         -h            show this message
         -k <0|1>      keyboard off/on
         -l <path>     keyboard layout config path
         -o <U|R|L>    screen orientation (up, right, left)
         -s <size>     font size
+        -t <encoding> terminal encoding
         -v            print version and exit
 ```
 
