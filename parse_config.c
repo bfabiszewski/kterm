@@ -64,6 +64,7 @@ KTconf *parse_config(void) {
     conf->color_reversed = FALSE;
     conf->font_size = VTE_FONT_SIZE;
     snprintf(conf->font_family, sizeof(conf->font_family), "%s", VTE_FONT_FAMILY);
+    snprintf(conf->encoding, sizeof(conf->encoding), "%s", VTE_ENCODING);
     snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", KB_FULL_PATH);
     conf->orientation = 0;
     
@@ -105,6 +106,12 @@ KTconf *parse_config(void) {
                 conf->font_size = font_size;
                 D printf("font_size = %u\n", conf->font_size);
             }
+        }
+        else if (!strncmp(buf, "encoding", 8)) {
+            gchar str[256];
+            sscanf(buf, "encoding = \"%[^\"\n\r]\"", str);
+            snprintf(conf->encoding, sizeof(conf->encoding), "%s", str);
+            D printf("encoding = %s\n", conf->encoding);
         }
         else if (!strncmp(buf, "kb_conf_path", 12)) {
             gchar str2[PATH_MAX];

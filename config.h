@@ -105,6 +105,7 @@ typedef struct {
     gboolean color_reversed; /** Color scheme, is reversed */
     gchar font_family[50]; /** Terminal font family */
     guint font_size;  /** Terminal font size */
+    gchar encoding[50]; /** Terminal encoding */
     gchar kb_conf_path[PATH_MAX];  /** Keyboard config path */
     gchar orientation;  /** Screen orientation: 'U', 'R' or 'L' */
     gchar orientation_saved;  /** Initial screen orientation: 'U', 'R' or 'L' */
