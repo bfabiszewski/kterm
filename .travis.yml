@@ -14,7 +14,7 @@ env:
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - export LIBGTK=$([ "${GTK_VERSION}" == 3 ] && echo 'libgtk-3-dev' || echo 'libgtk2.0-dev')
-  - export LIBVTE=$([ "${GTK_VERSION}" == 3 ] && echo 'libvte-2.90-dev' || echo 'libvte-dev')
+  - export LIBVTE=$([ "${GTK_VERSION}" == 3 ] && echo 'libvte-2.91-dev' || echo 'libvte-dev')
   - sudo apt-get update -qq
 
 install:
