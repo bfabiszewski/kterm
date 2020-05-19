@@ -41,6 +41,7 @@ Usage: kterm [OPTIONS]
         -l <path>     keyboard layout config path
         -o <U|R|L>    screen orientation (up, right, left)
         -s <size>     font size
+        -u <B|I|U>    cursor shape (block, I-beam, underline)
         -t <encoding> terminal encoding
         -v            print version and exit
 ```
