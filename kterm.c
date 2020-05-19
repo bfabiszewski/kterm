@@ -106,7 +106,11 @@ static void terminal_exit(void) {
  * @param cursor_shape Letter representing desired shape ('B', 'I' or 'U')
  */
 static void set_terminal_cursor(VteTerminal *terminal, gchar cursor_shape) {
+#if VTE_CHECK_VERSION(0,38,0)
+    VteCursorShape shape = 0;
+#else
     VteTerminalCursorShape shape = 0;
+#endif
     switch (cursor_shape) {
         case 'B':
             shape = VTE_CURSOR_SHAPE_BLOCK;
