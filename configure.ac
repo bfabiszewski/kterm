@@ -1,4 +1,4 @@
-AC_INIT([kterm], [2.5])
+AC_INIT([kterm], [2.6])
 AM_INIT_AUTOMAKE([foreign])
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
