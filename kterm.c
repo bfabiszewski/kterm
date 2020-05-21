@@ -100,6 +100,7 @@ static void terminal_exit(void) {
     gtk_main_quit();
 }
 
+#if VTE_CHECK_VERSION(0,20,0)
 /**
  * Set terminal cursor shape
  * @param terminal Terminal
@@ -124,7 +125,7 @@ static void set_terminal_cursor(VteTerminal *terminal, gchar cursor_shape) {
     }
     vte_terminal_set_cursor_shape(terminal, shape);
 }
-
+#endif
 
 /**
  * Set terminal font
@@ -510,8 +511,10 @@ static void usage(void) {
     printf("        -o <U|R|L>    screen orientation (up, right, left)\n");
 #endif
     printf("        -s <size>     font size\n");
-    printf("        -u <B|I|U>    cursor shape (block, I-beam, underline)\n");
     printf("        -t <encoding> terminal encoding\n");
+#if VTE_CHECK_VERSION(0,20,0)
+    printf("        -u <B|I|U>    cursor shape (block, I-beam, underline)\n");
+#endif
     printf("        -v            print version and exit\n");
     exit(0);
 }
@@ -547,7 +550,9 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
     set_terminal_colors(terminal, conf->color_reversed);
     vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), VTE_SCROLLBACK_LINES);
     set_terminal_font(VTE_TERMINAL(terminal), conf->font_family, (gint) conf->font_size);
+#if VTE_CHECK_VERSION(0,20,0)
     set_terminal_cursor(VTE_TERMINAL(terminal), conf->cursor_shape);
+#endif
 #if VTE_CHECK_VERSION(0,38,0)
     vte_terminal_set_encoding(VTE_TERMINAL(terminal), conf->encoding, NULL);
 #else
@@ -631,7 +636,7 @@ gint main(gint argc, gchar **argv) {
     // set terminfo path
     envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
-    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:u:t:v")) != -1) {
+    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:t:u:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;
@@ -662,14 +667,14 @@ gint main(gint argc, gchar **argv) {
                 i = atoi(optarg);
                 if (i > 0) conf->font_size = (guint) i;
                 break;
-            case 'u':
-                if (optarg[0] == 'B' || optarg[0] == 'I' || optarg[0] == 'U') { conf->cursor_shape = optarg[0]; }
-                break;
             case 'f':
                 snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
                 break;
             case 't':
                 snprintf(conf->encoding, sizeof(conf->encoding), "%s", optarg);
+                break;
+            case 'u':
+                if (optarg[0] == 'B' || optarg[0] == 'I' || optarg[0] == 'U') { conf->cursor_shape = optarg[0]; }
                 break;
             case 'h':
                 usage();
