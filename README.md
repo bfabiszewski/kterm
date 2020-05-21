@@ -42,6 +42,7 @@ Usage: kterm [OPTIONS]
         -o <U|R|L>    screen orientation (up, right, left)
         -s <size>     font size
         -t <encoding> terminal encoding
+        -u <B|I|U>    cursor shape (block, I-beam, underline)
         -v            print version and exit
 ```
 

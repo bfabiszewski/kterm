@@ -127,6 +127,14 @@ KTconf *parse_config(void) {
                 D printf("orientation = %c\n", conf->orientation);
             }
         }
+        else if (!strncmp(buf, "cursor_shape", 12)) {
+            gchar cursor_shape = 0;
+            sscanf(buf, "cursor_shape = %c", &cursor_shape);
+            if (cursor_shape == 'B' || cursor_shape == 'I' || cursor_shape == 'U') {
+                conf->cursor_shape = cursor_shape;
+                D printf("cursor_shape = %c\n", conf->cursor_shape);
+            }
+        }
     }
     
     fclose(fp);

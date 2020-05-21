@@ -100,6 +100,33 @@ static void terminal_exit(void) {
     gtk_main_quit();
 }
 
+#if VTE_CHECK_VERSION(0,20,0)
+/**
+ * Set terminal cursor shape
+ * @param terminal Terminal
+ * @param cursor_shape Letter representing desired shape ('B', 'I' or 'U')
+ */
+static void set_terminal_cursor(VteTerminal *terminal, gchar cursor_shape) {
+#if VTE_CHECK_VERSION(0,38,0)
+    VteCursorShape shape = 0;
+#else
+    VteTerminalCursorShape shape = 0;
+#endif
+    switch (cursor_shape) {
+        case 'B':
+            shape = VTE_CURSOR_SHAPE_BLOCK;
+            break;
+        case 'I':
+            shape = VTE_CURSOR_SHAPE_IBEAM;
+            break;
+        case 'U':
+            shape = VTE_CURSOR_SHAPE_UNDERLINE;
+            break;
+    }
+    vte_terminal_set_cursor_shape(terminal, shape);
+}
+#endif
+
 /**
  * Set terminal font
  * @param terminal Terminal
@@ -485,6 +512,9 @@ static void usage(void) {
 #endif
     printf("        -s <size>     font size\n");
     printf("        -t <encoding> terminal encoding\n");
+#if VTE_CHECK_VERSION(0,20,0)
+    printf("        -u <B|I|U>    cursor shape (block, I-beam, underline)\n");
+#endif
     printf("        -v            print version and exit\n");
     exit(0);
 }
@@ -520,6 +550,9 @@ static void setup_terminal(GtkWidget *terminal, gchar *command, gchar **envv, GE
     set_terminal_colors(terminal, conf->color_reversed);
     vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), VTE_SCROLLBACK_LINES);
     set_terminal_font(VTE_TERMINAL(terminal), conf->font_family, (gint) conf->font_size);
+#if VTE_CHECK_VERSION(0,20,0)
+    set_terminal_cursor(VTE_TERMINAL(terminal), conf->cursor_shape);
+#endif
 #if VTE_CHECK_VERSION(0,38,0)
     vte_terminal_set_encoding(VTE_TERMINAL(terminal), conf->encoding, NULL);
 #else
@@ -603,7 +636,7 @@ gint main(gint argc, gchar **argv) {
     // set terminfo path
     envv[envc++] = "TERMINFO=" TERMINFO_PATH;
 #endif
-    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:t:v")) != -1) {
+    while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:t:u:v")) != -1) {
         switch(c) {
             case 'd':
                 debug = TRUE;
@@ -639,6 +672,9 @@ gint main(gint argc, gchar **argv) {
                 break;
             case 't':
                 snprintf(conf->encoding, sizeof(conf->encoding), "%s", optarg);
+                break;
+            case 'u':
+                if (optarg[0] == 'B' || optarg[0] == 'I' || optarg[0] == 'U') { conf->cursor_shape = optarg[0]; }
                 break;
             case 'h':
                 usage();
