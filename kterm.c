@@ -638,6 +638,10 @@ gint main(gint argc, gchar **argv) {
 #endif
     while((c = getopt(argc, argv, "c:de:E:f:hk:l:o:s:t:u:v")) != -1) {
         switch(c) {
+            case 'c':
+                i = atoi(optarg);
+                if ((i == TRUE) | (i == FALSE)) { conf->color_reversed = i; }
+                break;
             case 'd':
                 debug = TRUE;
                 break;
@@ -649,9 +653,11 @@ gint main(gint argc, gchar **argv) {
                     envv[envc++] = optarg;
                 }
                 break;
-            case 'c':
-                i = atoi(optarg);
-                if ((i == TRUE) | (i == FALSE)) { conf->color_reversed = i; }
+            case 'f':
+                snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
+                break;
+            case 'h':
+                usage();
                 break;
             case 'k':
                 i = atoi(optarg);
@@ -667,17 +673,11 @@ gint main(gint argc, gchar **argv) {
                 i = atoi(optarg);
                 if (i > 0) conf->font_size = (guint) i;
                 break;
-            case 'f':
-                snprintf(conf->font_family, sizeof(conf->font_family), "%s", optarg);
-                break;
             case 't':
                 snprintf(conf->encoding, sizeof(conf->encoding), "%s", optarg);
                 break;
             case 'u':
                 if (optarg[0] == 'B' || optarg[0] == 'I' || optarg[0] == 'U') { conf->cursor_shape = optarg[0]; }
-                break;
-            case 'h':
-                usage();
                 break;
             case 'v':
                 version();
