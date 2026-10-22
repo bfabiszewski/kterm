@@ -80,6 +80,16 @@ For a list of what constitutes valid encodings, check [this list][iana-character
 #### Packages 
 * for Kindle Touch/Paperwhite are available at http://www.fabiszewski.net/kindle-terminal/
 
+#### Troubleshooting
+* **Keyboard does not appear** (and "Toggle keyboard" seems to do nothing): kterm
+  could not find its keyboard layout file. In that case the whole keyboard
+  widget stays empty, so showing it has no visible effect. Kterm looks for
+  `layouts/keyboard.xml` not only in the compile-time `sysconfdir`, but also
+  next to the binary and in the extension root (`<bin>/../layouts/`), and shows
+  the list of paths it tried when nothing is found. Run `kterm -d` to see which
+  layout was loaded, or set `kb_conf_path = "/path/to/layouts/keyboard.xml"` in
+  `kterm.conf` (or use `-l <path>`).
+
 #### License
  * GPL version 3 or (at your option) any later version
 

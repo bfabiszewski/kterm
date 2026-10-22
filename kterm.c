@@ -350,8 +350,16 @@ static void toggle_keyboard(GtkWidget *widget, gpointer box) {
             gtk_widget_hide(keyboard_box);
             conf->kb_on = FALSE;
         } else {
+            Keyboard *keyboard = g_object_get_data(G_OBJECT(keyboard_box), "kterm-keyboard");
+            if G_UNLIKELY(!keyboard || keyboard->key_count == 0) {
+                D printf("No keyboard layout loaded, nothing to show\n");
+            }
             gtk_widget_show(keyboard_box);
             conf->kb_on = TRUE;
+            if (keyboard) {
+                // recalculate size for the current window geometry
+                g_idle_add(keyboard_set_size, keyboard);
+            }
         }
     }
 }
@@ -724,12 +732,16 @@ gint main(gint argc, gchar **argv) {
     gtk_widget_set_name(keyboard_box, "kbBox");
     
     Keyboard *keyboard = build_layout(keyboard_box, &error);
+    if G_UNLIKELY(!keyboard && !error) {
+        g_set_error(&error, G_FILE_ERROR, G_FILE_ERROR_NOENT, "Keyboard layout could not be loaded");
+    }
     if G_UNLIKELY(error) {
         error_handle(window, &error);
         clean_on_exit(keyboard);
         exit(1);
     }
     gtk_box_pack_end(GTK_BOX(vbox), keyboard_box, FALSE, FALSE, 0);
+    g_object_set_data(G_OBJECT(keyboard_box), "kterm-keyboard", keyboard);
     keyboard_set_size(keyboard);
     
     GtkWidget *terminal = vte_terminal_new();

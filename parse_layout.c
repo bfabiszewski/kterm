@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "keyboard.h"
 #include "config.h"
 
@@ -502,26 +503,108 @@ static void state_cleanup(State *state) {
 }
 
 /**
+ * Get directory containing the running binary
+ * @return Newly allocated directory path or null on failure
+ */
+static gchar * layout_exe_dir(void) {
+    gchar self[PATH_MAX];
+    gssize len = readlink("/proc/self/exe", self, sizeof(self) - 1);
+    if (len == -1) {
+        return NULL;
+    }
+    self[len] = '\0';
+    return g_path_get_dirname(self);
+}
+
+/**
+ * Open keyboard layout file.
+ *
+ * The layout path is build-time/config-time data, so it may not match the
+ * place the package was actually unpacked to (for example an extension
+ * installed into /mnt/us/kterm instead of /mnt/us/extensions/kterm).
+ * Missing layout makes the keyboard an empty widget, and "Toggle keyboard"
+ * then silently shows nothing. Try a few sane locations next to the binary
+ * before giving up.
+ *
+ * @param error Set when no layout could be opened
+ * @return Opened file stream or null on failure
+ */
+static FILE * layout_open(GError **error) {
+    const gchar *env_path = getenv("MB_KBD_CONFIG");
+    GString *tried = g_string_new(NULL);
+    gchar *exe_dir = layout_exe_dir();
+    gchar *candidates[8];
+    guint count = 0;
+    FILE *fp = NULL;
+
+    candidates[count++] = g_strdup(env_path);
+    candidates[count++] = g_strdup(conf->kb_conf_path);
+    if (exe_dir) {
+        // layouts next to the binary and layouts in the extension root
+        candidates[count++] = g_build_filename(exe_dir, "layouts", "keyboard.xml", NULL);
+        gchar *parent_dir = g_path_get_dirname(exe_dir);
+        candidates[count++] = g_build_filename(parent_dir, "layouts", "keyboard.xml", NULL);
+        g_free(parent_dir);
+        g_free(exe_dir);
+    }
+    candidates[count++] = g_strdup(KB_FULL_PATH);
+
+    // drop duplicates; the same paths are often configured twice
+    for (guint i = 0; i < count; i++) {
+        if (!candidates[i]) {
+            continue;
+        }
+        for (guint j = i + 1; j < count; j++) {
+            if (candidates[j] && !strcmp(candidates[i], candidates[j])) {
+                g_free(candidates[j]);
+                candidates[j] = NULL;
+            }
+        }
+    }
+
+    for (guint i = 0; i < count && !fp; i++) {
+        const gchar *path = candidates[i];
+        if (!path || !*path) {
+            continue;
+        }
+        if ((fp = fopen(path, "r")) != NULL) {
+            if (strcmp(path, conf->kb_conf_path) != 0) {
+                D printf("Layout fallback path: %s\n", path);
+                snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", path);
+            } else {
+                D printf("Layout path from config: %s\n", path);
+            }
+            break;
+        }
+        D printf("Layout not found at: %s\n", path);
+        g_string_append_printf(tried, "\n  %s", path);
+    }
+
+    for (guint i = 0; i < count; i++) {
+        g_free(candidates[i]);
+    }
+
+    if (!fp) {
+        D printf("No layout config\n");
+        g_set_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT,
+                    "No keyboard layout file found. Tried:%s\n\n"
+                    "Set kb_conf_path in kterm.conf (or use -l) to point at the "
+                    "layouts directory of your installation.",
+                    tried->str);
+    }
+    g_string_free(tried, TRUE);
+    return fp;
+}
+
+/**
  * Parse keyboard config and build initial layout
  * @param parent Parent widget for keyboard widget
  * @param error Set on error, null if success
  * @return Keyboard structure, null on failure
  */
 Keyboard * build_layout(GtkWidget *parent, GError **error) {
-    FILE *fp = NULL;
-    if (getenv("MB_KBD_CONFIG")) {
-        // override path with env variable
-        gchar kb_env_path[PATH_MAX];
-        snprintf(kb_env_path, sizeof(kb_env_path), "%s", getenv("MB_KBD_CONFIG"));
-        fp = fopen(kb_env_path, "r");
-    }
-    if (fp) {
-        snprintf(conf->kb_conf_path, sizeof(conf->kb_conf_path), "%s", getenv("MB_KBD_CONFIG"));
-        D printf("Layout path from MB_KBD_CONFIG: %s\n", getenv("MB_KBD_CONFIG"));
-    } else if ((fp = fopen(conf->kb_conf_path, "r")) != NULL) {
-        D printf("Layout path from config: %s\n", conf->kb_conf_path);
-    } else {
-        D printf("No layout config\n");
+    FILE *fp = layout_open(error);
+    if (!fp) {
         return NULL;
     }
 
